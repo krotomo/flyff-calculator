@@ -5,25 +5,41 @@ import { useState } from "react"
 export default function PetCalculator() {
   // form state
   const [ showResults, setShowResults ] = useState<boolean>(false)
-  const [ petType, setPetType ] = useState<string>("unicorn")
-  const [ statGoal, setStatGoal ] = useState<number>(7162)
+  const [ petType, setPetType ] = useState<string>()
+  const [ levels, setLevels ] = useState<number[]>()
+  const [ statGoal, setStatGoal ] = useState<number>()
+  const [ sacPrices, setSacPrices ] = useState<{[key: string]: number}>()
+  const [ candyPrices, setCandyPrices ] = useState<{[key: string]: number}>()
 
-  function setPetState(newPetType: string, newStatGoal: number) {
+  function setPetState(
+    newPetType: string, 
+    newLevels: number[], 
+    newStatGoal: number, 
+    newSacPrices: {[key: string]: number},
+    newCandyPrices: {[key: string]: number},
+  ) {
     setPetType(newPetType)
+    setLevels(newLevels)
     setStatGoal(newStatGoal)
+    setSacPrices(newSacPrices)
+    setCandyPrices(newCandyPrices)
     setShowResults(true)
   }
   
 
   return(
     <div>
+      <h1>Pet Cost Calculator</h1>
       <PetInput
         setPetState={setPetState}
       ></PetInput>
       {showResults &&
         <PetResults
           petType={petType}
+          levels={levels}
           statGoal={statGoal}
+          sacPrices={sacPrices}
+          candyPrices={candyPrices}
         ></PetResults>
       }
     </div>
