@@ -1,6 +1,110 @@
+import { useState, useRef, useEffect, FormEvent } from "react";
 import { useForm, useFieldArray } from "react-hook-form"
 
-export default function PetInput({ setPetState }: {
+type FormValues = {
+  petType: string,
+  levels: string,
+  statGoal: string,
+  sacPrice: {
+    tier: string,
+    price: string,
+  }[],
+  candyPrice: {
+    tier: string,
+    price: string,
+  }[],
+}
+
+const statRange: { [key: string]: { min: number, max: number } } = {
+  "unicorn": { min: 78, max: 7182 },
+  "dragon": { min: 7, max: 500 },
+  "griffin": { min: 6, max: 450 },
+  "angel": { min: 1, max: 31 },
+  "crab": { min: 2, max: 45 },
+  "tiger": { min: 1, max: 75 },
+  "lion": { min: 1, max: 75 },
+  "rabbit": { min: 1, max: 75 },
+  "fox": { min: 1, max: 75 },
+}
+
+const numberFormat = new Intl.NumberFormat('en-US')
+
+function LevelInput() { 
+  function format(input: string): string {
+    const digitsOnly = input.replace(/[^0-9]/g, "")
+    return [...digitsOnly].slice(0, 7).join("/")
+  }
+  return FormattedNumberInput(format)
+}
+
+function SeparatedNumberInput() {
+  function format(input: string): string {
+    const digitsOnly = input.replace(/[^0-9]/g, "")
+    return numberFormat.format(Number(digitsOnly))
+  }
+  return FormattedNumberInput(format)
+}
+
+function FormattedNumberInput(format: (input: string) => string) {
+  const [value, setValue] = useState<string>("")
+  const [cursorIndex, setCursorIndex] = useState({ value: 0 })
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  function countDigits(input: string): number {
+    return (input.match(/\d/g) || []).length
+  }
+
+  function handleChange(event: FormEvent) {
+    const {value: inputValue, selectionStart} = event.target as HTMLTextAreaElement
+
+    if (countDigits(inputValue) === 0) {
+      setValue("")
+      return
+    }
+
+    const newValue = format(inputValue)
+    const numDigitsBeforeCursor = countDigits(inputValue.slice(0, selectionStart))
+
+    setValue(newValue)
+
+    if (numDigitsBeforeCursor === 0) {
+      setCursorIndex({ value: 0 })
+      return
+    }
+
+    let numDigitsFound = 0
+    let newCursorIndex = newValue.length
+    for(let i = 0; i < newValue.length; i++) {
+      if (/\d/.test(newValue[i])) {
+        numDigitsFound++
+      }
+      if (numDigitsFound === numDigitsBeforeCursor) {
+        newCursorIndex = i + 1
+        break
+      }
+    }
+
+    setCursorIndex({ value: newCursorIndex })
+  }
+
+  useEffect(() => {
+    console.log("render!")
+    if (inputRef.current) {
+      inputRef.current.setSelectionRange(cursorIndex.value, cursorIndex.value);
+    }
+  }, [cursorIndex]);
+
+  return(
+    <input
+      value={value}
+      ref={inputRef}
+      inputMode="numeric"
+      onChange={handleChange}
+    ></input>
+  )
+}
+
+function PetInput({ setPetState }: {
   setPetState: (
     petType: string, 
     levels: number[], 
@@ -9,37 +113,10 @@ export default function PetInput({ setPetState }: {
     candyPrices: {[key: string]: number}
   ) => void;
 }) {
-  type FormValues = {
-    petType: string,
-    levels: string,
-    statGoal: {
-      type: string,
-      goal: string,
-    }[],
-    sacPrice: {
-      tier: string,
-      price: string,
-    }[],
-    candyPrice: {
-      tier: string,
-      price: string,
-    }[],
-  }
-
   const defaultValues : FormValues = {
-    petType: "unicorn",
+    petType: "",
     levels: "1",
-    statGoal: [
-      { type: "unicorn", goal: "7162" },
-      { type: "dragon", goal: "500" },
-      { type: "griffin", goal: "450" },
-      { type: "angel", goal: "31" },
-      { type: "crab", goal: "45" },
-      { type: "tiger", goal: "75" },
-      { type: "lion", goal: "75" },
-      { type: "rabbit", goal: "75" },
-      { type: "fox", goal: "75" },
-    ],
+    statGoal: "",
     sacPrice: [
       { tier: "e", price: "6000000" },
       { tier: "d", price: "20000000" },
@@ -70,19 +147,15 @@ export default function PetInput({ setPetState }: {
     "fox": "INT",
   }
 
-  const { control, register, watch, handleSubmit, formState: {errors} } = useForm({
+  const { control, register, watch, handleSubmit } = useForm({
     defaultValues: defaultValues
   })
-  const { fields: statGoalFields } = useFieldArray({
-    control,
-    name: "statGoal",
-  })
   const { fields: sacPriceFields } = useFieldArray({
-    control,
+    control: control,
     name: "sacPrice",
   })
   const { fields: candyPriceFields } = useFieldArray({
-    control,
+    control: control,
     name: "candyPrice",
   })
 
@@ -95,13 +168,7 @@ export default function PetInput({ setPetState }: {
         levels.push(parseInt(level))
       }
     }
-    const statGoal = parseInt(
-      (
-        formData.statGoal.find((statGoalObject) => {
-          return statGoalObject.type === formData.petType
-        }) as {type: string, goal: string}
-      ).goal
-    )
+    const statGoal = parseInt(formData.statGoal)
     const sacPrices: {[key: string]: number} = {}
     for (const priceObject of formData.sacPrice) {
       sacPrices[priceObject.tier] = parseInt(priceObject.price)
@@ -165,24 +232,7 @@ export default function PetInput({ setPetState }: {
         <div>
           <label>
             Goal:
-            {
-              statGoalFields.map((field, index: number) => {
-                return (
-                  petType === field.type &&
-                  <input key={field.type}
-                    {...register(
-                      `statGoal.${index}.goal`,
-                      {
-                        required: true,
-                        min: 0,
-                        max: defaultValues.statGoal[index].goal
-                      }
-                    )}
-                    type="number"
-                  ></input>
-                )
-              })
-            }
+              <SeparatedNumberInput />
             { statNameByPetType[petType] }
           </label>
         </div>
@@ -244,3 +294,5 @@ export default function PetInput({ setPetState }: {
     </div>
   )
 }
+
+export { PetInput }

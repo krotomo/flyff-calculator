@@ -1,4 +1,4 @@
-import PetInput from "../components/pet-input"
+import { PetInput } from "../components/pet-input"
 import PetResults from "../components/pet-results"
 import { useState } from "react"
 
