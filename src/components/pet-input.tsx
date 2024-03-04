@@ -1,5 +1,15 @@
-import { useState, useRef, useEffect, FormEvent } from "react";
-import { useForm, useFieldArray } from "react-hook-form"
+import { useForm, useFieldArray, Controller } from "react-hook-form"
+import { NumericFormat } from 'react-number-format';
+import { PatternFormat } from 'react-number-format';
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 
 type FormValues = {
   petType: string,
@@ -25,83 +35,6 @@ const statRange: { [key: string]: { min: number, max: number } } = {
   "lion": { min: 1, max: 75 },
   "rabbit": { min: 1, max: 75 },
   "fox": { min: 1, max: 75 },
-}
-
-const numberFormat = new Intl.NumberFormat('en-US')
-
-function LevelInput() { 
-  function format(input: string): string {
-    const digitsOnly = input.replace(/[^0-9]/g, "")
-    return [...digitsOnly].slice(0, 7).join("/")
-  }
-  return FormattedNumberInput(format)
-}
-
-function SeparatedNumberInput() {
-  function format(input: string): string {
-    const digitsOnly = input.replace(/[^0-9]/g, "")
-    return numberFormat.format(Number(digitsOnly))
-  }
-  return FormattedNumberInput(format)
-}
-
-function FormattedNumberInput(format: (input: string) => string) {
-  const [value, setValue] = useState<string>("")
-  const [cursorIndex, setCursorIndex] = useState({ value: 0 })
-  const inputRef = useRef<HTMLInputElement>(null)
-
-  function countDigits(input: string): number {
-    return (input.match(/\d/g) || []).length
-  }
-
-  function handleChange(event: FormEvent) {
-    const {value: inputValue, selectionStart} = event.target as HTMLTextAreaElement
-
-    if (countDigits(inputValue) === 0) {
-      setValue("")
-      return
-    }
-
-    const newValue = format(inputValue)
-    const numDigitsBeforeCursor = countDigits(inputValue.slice(0, selectionStart))
-
-    setValue(newValue)
-
-    if (numDigitsBeforeCursor === 0) {
-      setCursorIndex({ value: 0 })
-      return
-    }
-
-    let numDigitsFound = 0
-    let newCursorIndex = newValue.length
-    for(let i = 0; i < newValue.length; i++) {
-      if (/\d/.test(newValue[i])) {
-        numDigitsFound++
-      }
-      if (numDigitsFound === numDigitsBeforeCursor) {
-        newCursorIndex = i + 1
-        break
-      }
-    }
-
-    setCursorIndex({ value: newCursorIndex })
-  }
-
-  useEffect(() => {
-    console.log("render!")
-    if (inputRef.current) {
-      inputRef.current.setSelectionRange(cursorIndex.value, cursorIndex.value);
-    }
-  }, [cursorIndex]);
-
-  return(
-    <input
-      value={value}
-      ref={inputRef}
-      inputMode="numeric"
-      onChange={handleChange}
-    ></input>
-  )
 }
 
 function PetInput({ setPetState }: {
@@ -192,8 +125,8 @@ function PetInput({ setPetState }: {
         <h2>Pet Info</h2>
         <div>
           <label>
-            Pet Type:
-            <select 
+            <Label>Pet Type</Label>
+            <Select
               {...register(
                 "petType", 
                 {
@@ -201,40 +134,56 @@ function PetInput({ setPetState }: {
                 }
               )}
             >
-              <option value="unicorn">Unicorn</option>
-              <option value="dragon">Dragon</option>
-              <option value="griffin">Griffin</option>
-              <option value="angel">Angel</option>
-              <option value="crab">Crab</option>
-              <option value="tiger">Tiger</option>
-              <option value="lion">Lion</option>
-              <option value="rabbit">Rabbit</option>
-              <option value="fox">Fox</option>
-            </select>
+              <SelectTrigger>
+                <SelectValue placeholder="Select Pet"/>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="unicorn">Unicorn</SelectItem>
+                <SelectItem value="dragon">Dragon</SelectItem>
+                <SelectItem value="griffin">Griffin</SelectItem>
+                <SelectItem value="angel">Angel</SelectItem>
+                <SelectItem value="crab">Crab</SelectItem>
+                <SelectItem value="tiger">Tiger</SelectItem>
+                <SelectItem value="lion">Lion</SelectItem>
+                <SelectItem value="rabbit">Rabbit</SelectItem>
+                <SelectItem value="fox">Fox</SelectItem>
+              </SelectContent>
+            </Select>          
           </label>
         </div>
         <div>
-          <label>
-            Levels:
-            <input
-              {...register(
-                "levels",
-                {
-                  required: true,
-                  min: 1,
-                  max: 1234579,
-                }
-              )}
-            >
-            </input>
-          </label>
+          <Controller
+            control={control}
+            name="levels"
+            render={
+              ({ field }) => (
+                <div>
+                  <Label>Levels</Label>
+                  <PatternFormat 
+                    {...field}
+                    type="text"
+                    allowEmptyFormatting
+                    format="#/#/#/#/#/#/#"
+                    customInput={Input}
+                  />
+                </div>
+              )
+            }
+          />
         </div>
         <div>
-          <label>
-            Goal:
-              <SeparatedNumberInput />
-            { statNameByPetType[petType] }
-          </label>
+          <Label>Stat Goal</Label>
+          <Input
+            {...register(
+              "statGoal", 
+              {
+                required: true,
+                min: 0,
+              }
+            )}
+            type="text"
+            inputMode="numeric"
+          />
         </div>
         <h2>Prices</h2>
         <h3>Sac Pets</h3>
@@ -242,22 +191,28 @@ function PetInput({ setPetState }: {
           {
             sacPriceFields.map((field, index: number) => {
               return (              
-                <label key={field.tier}>
-                  {field.tier}:
-                  <input
-                    {
-                      ...register(
-                        (`sacPrice.${index}.price`),
-                        {
-                          required: true,
-                          min: 0,
-                        }
+                <div key={field.tier}>
+                  <Label>{field.tier}</Label>
+                  <Controller
+                    control={control}
+                    name={`sacPrice.${index}.price`}
+                    rules={{
+                      required: true,
+                      min: 0,
+                    }}
+                    render={
+                      ({ field }) => (
+                        <NumericFormat
+                          {...field}
+                          type="text"
+                          thousandsGroupStyle="thousand"
+                          thousandSeparator=","
+                          customInput={Input}
+                        />
                       )
                     }
-                    type="number"
-                  >
-                  </input>
-                </label>
+                  />
+                </div>
               )
             })
           }
@@ -267,22 +222,28 @@ function PetInput({ setPetState }: {
           {
             candyPriceFields.map((field, index: number) => {
               return (              
-                <label key={field.tier}>
-                  {field.tier}:
-                  <input
-                    {
-                      ...register(
-                        (`candyPrice.${index}.price` as const),
-                        {
-                          required: true,
-                          min: 0,
-                        }
+                <div key={field.tier}>
+                  <Label>{field.tier}</Label>
+                  <Controller 
+                    control={control}
+                    name={`candyPrice.${index}.price`}
+                    rules={{
+                      required: true,
+                      min: 0,
+                    }}
+                    render={
+                      ({ field }) => (
+                        <NumericFormat
+                          {...field}
+                          type="text"
+                          thousandsGroupStyle="thousand"
+                          thousandSeparator=","
+                          customInput={Input}
+                        />
                       )
                     }
-                    type="number"
-                  >
-                  </input>
-                </label>
+                  />
+                </div>
               )
             })
           }
