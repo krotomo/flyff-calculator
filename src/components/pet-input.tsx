@@ -125,43 +125,46 @@ function PetInput({ setPetState }: {
       <form onSubmit={handleSubmit((formData) => onSubmit(formData))}>
         <h2>Pet Info</h2>
         <div>
-          <label>
-            <Label>Pet Type</Label>
-            <Select
-              {...register(
-                "petType", 
-                {
-                  required: true,
-                }
-              )}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select Pet"/>
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="unicorn">Unicorn</SelectItem>
-                <SelectItem value="dragon">Dragon</SelectItem>
-                <SelectItem value="griffin">Griffin</SelectItem>
-                <SelectItem value="angel">Angel</SelectItem>
-                <SelectItem value="crab">Crab</SelectItem>
-                <SelectItem value="tiger">Tiger</SelectItem>
-                <SelectItem value="lion">Lion</SelectItem>
-                <SelectItem value="rabbit">Rabbit</SelectItem>
-                <SelectItem value="fox">Fox</SelectItem>
-              </SelectContent>
-            </Select>          
-          </label>
+          <Label>Pet Type</Label>
+          <Controller
+            control={control}
+            name="petType"
+            render={
+              ({ field: { onChange, value } }) => (
+                <Select
+                  onValueChange={onChange}
+                  value={value}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select Pet"/>
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="unicorn">Unicorn</SelectItem>
+                    <SelectItem value="dragon">Dragon</SelectItem>
+                    <SelectItem value="griffin">Griffin</SelectItem>
+                    <SelectItem value="angel">Angel</SelectItem>
+                    <SelectItem value="crab">Crab</SelectItem>
+                    <SelectItem value="tiger">Tiger</SelectItem>
+                    <SelectItem value="lion">Lion</SelectItem>
+                    <SelectItem value="rabbit">Rabbit</SelectItem>
+                    <SelectItem value="fox">Fox</SelectItem>
+                  </SelectContent>
+                </Select>     
+              )
+            }
+          />
         </div>
         <div>
           <Controller
             control={control}
             name="levels"
             render={
-              ({ field }) => (
+              ({ field: { onChange, value } }) => (
                 <div>
                   <Label>Levels</Label>
                   <PatternFormat 
-                    {...field}
+                    onChange={onChange}
+                    value={value}
                     type="text"
                     allowEmptyFormatting
                     format="#/#/#/#/#/#/#"
@@ -202,9 +205,10 @@ function PetInput({ setPetState }: {
                       min: 0,
                     }}
                     render={
-                      ({ field }) => (
+                      ({ field: { onChange, value } }) => (
                         <NumericFormat
-                          {...field}
+                          onChange={onChange}
+                          value={value}
                           type="text"
                           thousandsGroupStyle="thousand"
                           thousandSeparator=","
@@ -233,9 +237,10 @@ function PetInput({ setPetState }: {
                       min: 0,
                     }}
                     render={
-                      ({ field }) => (
+                      ({ field: { onChange, value } }) => (
                         <NumericFormat
-                          {...field}
+                          onChange={onChange}
+                          value={value}
                           type="text"
                           thousandsGroupStyle="thousand"
                           thousandSeparator=","
