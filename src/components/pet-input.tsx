@@ -4,7 +4,6 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { NumericFormat } from 'react-number-format';
 import { PatternFormat } from 'react-number-format';
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import {
   Select,
   SelectContent,
@@ -21,6 +20,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form"
+import { Button } from "@/components/ui/button"
 
 const formSchema = z.object({
   petType: z.string(),
@@ -130,99 +130,95 @@ function PetInput({ setPetState }: {
   }
 
   return(
-    <div>
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)}>
-          <h2>Pet Info</h2>
-          <div>
-            <FormField
-              control={form.control}
-              name="petType"
-              render={
-                ({ field }) => (  
-                  <FormItem>
-                    <FormLabel>Pet Type</FormLabel>
-                    <Select onValueChange={field.onChange}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select Pet Type"/>
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="unicorn">Unicorn</SelectItem>
-                        <SelectItem value="dragon">Dragon</SelectItem>
-                        <SelectItem value="griffin">Griffin</SelectItem>
-                        <SelectItem value="angel">Angel</SelectItem>
-                        <SelectItem value="crab">Crab</SelectItem>
-                        <SelectItem value="tiger">Tiger</SelectItem>
-                        <SelectItem value="lion">Lion</SelectItem>
-                        <SelectItem value="rabbit">Rabbit</SelectItem>
-                        <SelectItem value="fox">Fox</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>      
-                )
-              }
-            />
-          </div>
-          <div>
-            <Label htmlFor="levels">Levels</Label>
-            <Controller
-              control={form.control}
-              name="levels"
-              render={
-                ({ field: { onChange, value } }) => (            
-                  <PatternFormat 
-                    id="levels"
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)}>
+        <h2>Pet Info</h2>
+          <FormField
+            control={form.control}
+            name="petType"
+            render={
+              ({ field: { onChange } }) => (  
+                <FormItem>
+                  <FormLabel>Pet Type</FormLabel>
+                  <Select onValueChange={onChange}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select Pet Type"/>
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="unicorn">Unicorn</SelectItem>
+                      <SelectItem value="dragon">Dragon</SelectItem>
+                      <SelectItem value="griffin">Griffin</SelectItem>
+                      <SelectItem value="angel">Angel</SelectItem>
+                      <SelectItem value="crab">Crab</SelectItem>
+                      <SelectItem value="tiger">Tiger</SelectItem>
+                      <SelectItem value="lion">Lion</SelectItem>
+                      <SelectItem value="rabbit">Rabbit</SelectItem>
+                      <SelectItem value="fox">Fox</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>      
+              )
+            }
+          />
+          <FormField
+            control={form.control}
+            name="levels"
+            render={
+              ({ field: { onChange, value } }) => (
+                <FormItem>
+                  <FormLabel>Levels</FormLabel>
+                  <FormControl>
+                    <PatternFormat 
+                      id="levels"
+                      onChange={onChange}
+                      value={value}
+                      type="text"
+                      allowEmptyFormatting
+                      format="1/#/#/#/#/#/#"
+                      customInput={Input}
+                    />
+                  </FormControl>
+                </FormItem>
+              )
+            }
+          />
+          <FormField 
+            control={form.control}
+            name="statGoal"
+            render={
+              ({ field: { onChange } }) => (
+                <FormItem>
+                  <FormLabel>Stat Goal</FormLabel>
+                  <FormControl>
+                  <Input
                     onChange={onChange}
-                    value={value}
                     type="text"
-                    allowEmptyFormatting
-                    format="#/#/#/#/#/#/#"
-                    customInput={Input}
+                    inputMode="numeric"
                   />
-                )
-              }
-            />
-          </div>
-          <div>
-            <Label htmlFor="statGoal">Stat Goal</Label>
-            <Input
-              id="statGoal"
-              {...form.register(
-                "statGoal", 
-                {
-                  required: true,
-                  min: 0,
-                }
-              )}
-              type="text"
-              inputMode="numeric"
-            />
-          </div>
-          <h2>Prices</h2>
-          <h3>Sac Pets</h3>
-          <div>
-            {
-              sacPriceFields.map((field, index: number) => {
-                return (              
-                  <div key={`sacPrice.${field.tier}`}>
-                    <Label 
-                      className="capitalize"
-                      htmlFor={`sacPrice.${field.tier}`}
-                    >{field.tier}</Label>
-                    <Controller
-                      control={form.control}
-                      name={`sacPrice.${index}.price`}
-                      rules={{
-                        required: true,
-                        min: 0,
-                      }}
-                      render={
-                        ({ field: { onChange, value } }) => (
+                  </FormControl>
+                </FormItem>
+              )
+            }
+          />
+        <h2>Prices</h2>
+        <h3>Sac Pets</h3>
+        <div>
+          {
+            sacPriceFields.map((field, index: number) => {
+              return (              
+                <FormField
+                  key={`sacPrice.${field.tier}`}
+                  control={form.control}
+                  name={`sacPrice.${index}.price`}
+                  render={
+                    ({ field: { onChange, value } }) => (
+                      <FormItem>
+                        <FormLabel className="capitalize">{field.tier}</FormLabel>
+                        <FormControl>
                           <NumericFormat
-                            id={`sacPrice.${field.tier}`}
                             onChange={onChange}
                             value={value}
                             type="text"
@@ -230,35 +226,30 @@ function PetInput({ setPetState }: {
                             thousandSeparator=","
                             customInput={Input}
                           />
-                        )
-                      }
-                    />
-                  </div>
-                )
-              })
-            }
-          </div>
-          <h3>Pet Candy</h3>
-          <div>
-            {
-              candyPriceFields.map((field, index: number) => {
-                return (              
-                  <div key={`candyPrice.${field.tier}`}>
-                    <Label 
-                      className="capitalize"
-                      htmlFor={`candyPrice.${field.tier}`}
-                    >{field.tier}</Label>
-                    <Controller 
-                      control={form.control}
-                      name={`candyPrice.${index}.price`}
-                      rules={{
-                        required: true,
-                        min: 0,
-                      }}
-                      render={
-                        ({ field: { onChange, value } }) => (
-                          <NumericFormat
-                            id={`candyPrice.${field.tier}`}
+                        </FormControl>
+                      </FormItem>
+                    )
+                  }
+                />
+              )
+            })
+          }
+        </div>
+        <h3>Pet Candy</h3>
+        <div>
+          {
+            candyPriceFields.map((field, index: number) => {
+              return (              
+                <FormField
+                  key={`candyPrice.${field.tier}`}
+                  control={form.control}
+                  name={`candyPrice.${index}.price`}
+                  render={
+                    ({ field: { onChange, value }}) => (
+                      <FormItem>
+                        <FormLabel className="capitalize">{field.tier}</FormLabel>
+                        <FormControl>
+                          <NumericFormat 
                             onChange={onChange}
                             value={value}
                             type="text"
@@ -266,20 +257,18 @@ function PetInput({ setPetState }: {
                             thousandSeparator=","
                             customInput={Input}
                           />
-                        )
-                      }
-                    />
-                  </div>
-                )
-              })
-            }
-          </div>
-          <div>
-            <button type="submit">Calculate</button>
-          </div>
-        </form>
-      </Form>
-    </div>
+                        </FormControl>
+                      </FormItem>
+                    )
+                  }
+                />
+              )
+            })
+          }
+        </div>
+        <Button type="submit">Calculate</Button>
+      </form>
+    </Form>
   )
 }
 
