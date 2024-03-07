@@ -4,3 +4,9 @@ type Pet =
 
 type Tier =
   "f" | "e" | "d" | "c" | "b" | "a" | "s"
+
+type SacTier =
+  Exclude<Tier, "f">
+
+type RaiseTier =
+  Exclude<Tier, "s">

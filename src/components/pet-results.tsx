@@ -4,12 +4,12 @@ export default function PetResults({ petType, levels, statGoal, sacPrices, candy
   petType: string;
   levels: number[];
   statGoal: number;
-  sacPrices: Record<Tier, number>;
-  candyPrices: Record<Tier, number>;
+  sacPrices: Record<SacTier, number>;
+  candyPrices: Record<RaiseTier, number>;
 }) {
   statGoal = isNaN(statGoal) ? 0 : statGoal
 
-  const p: { [key: string]: {[key: string]: number[]} } = {
+  const p: Record<Tier, Partial<Record<Tier, number[]>>> = {
     "f": {
         "f": [1],
     },
@@ -48,9 +48,9 @@ export default function PetResults({ petType, levels, statGoal, sacPrices, candy
     }
   }
 
-  const tiers = ["g", "f", "e", "d", "c", "b", "a", "s"]
+  const tiers: Tier[] = ["f", "f", "e", "d", "c", "b", "a", "s"]
 
-  const candyPerTier: Partial<Record<Tier, number>> = {
+  const candyPerTier: Record<RaiseTier, number> = {
     "f": 20,
     "e": 20,
     "d": 25,
@@ -59,9 +59,9 @@ export default function PetResults({ petType, levels, statGoal, sacPrices, candy
     "a": 50,
   }
   
-  const costUp: Partial<Record<Tier, number>> = {}
+  const costUp: Record<RaiseTier, number> = {}
   Object.keys(candyPrices).forEach((tier) => {
-    costUp[tier as Tier] = candyPerTier[tier as Tier] * candyPrices[tier as Tier]
+    costUp[tier as RaiseTier] = candyPerTier[tier as RaiseTier] * candyPrices[tier as RaiseTier]
   })
   console.log(costUp)
 
@@ -95,7 +95,6 @@ export default function PetResults({ petType, levels, statGoal, sacPrices, candy
     if (tier !== "s") result.push("up")
     if (
       tier !== "f" && 
-      tier !== "g" &&
       state.slice(-1)[0] < levelsPerTier[tier]
     ) {
       for (const sac in p[tier]) {
@@ -105,7 +104,7 @@ export default function PetResults({ petType, levels, statGoal, sacPrices, candy
     return result
   }
   
-  function statsTotal(state: number[], petType: string): number {
+  function statsTotal(state: number[], petType: Pet): number {
     let sum = 0
     for (const level of state) {
       sum += statsByPetType[petType][level-1]
@@ -113,11 +112,11 @@ export default function PetResults({ petType, levels, statGoal, sacPrices, candy
     return sum
   }
   
-  function isGoodEnd(state: number[], petType: string, goal: number): boolean {
+  function isGoodEnd(state: number[], petType: Pet, goal: number): boolean {
     return statsTotal(state, petType) >= goal
   }
   
-  function isBadEnd(state: number[], petType: string, goal: number): boolean {
+  function isBadEnd(state: number[], petType: Pet, goal: number): boolean {
     return (
       tiers[state.length] == "s" &&
       state.slice(-1)[0] == 9 &&
@@ -126,7 +125,7 @@ export default function PetResults({ petType, levels, statGoal, sacPrices, candy
   }
   
   class ActionCount { 
-    sac: { [key: string]: number } = {
+    sac: Record<SacTier, number> = {
       "e": 0,
       "d": 0,
       "c": 0,
@@ -134,7 +133,7 @@ export default function PetResults({ petType, levels, statGoal, sacPrices, candy
       "a": 0,
       "s": 0,
     }
-    up: { [key: string]: number } = {
+    up: Record<RaiseTier, number> = {
       "f": 0,
       "e": 0,
       "d": 0,
