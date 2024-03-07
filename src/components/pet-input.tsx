@@ -25,7 +25,10 @@ import { Button } from "@/components/ui/button"
 const formSchema = z.object({
   petType: z.string(),
   levels: z.string(),
-  statGoal: z.string(),
+  statGoal: z.object({
+    "unicorn": z.string().max(7162),
+    "dragon": z.string().max(500)
+  }),
   sacPrice: z.array(z.object({
     tier: z.string(),
     price: z.string(),
@@ -57,7 +60,7 @@ function PetInput({ setPetState }: {
     candyPrices: {[key: string]: number}
   ) => void;
 }) {
-  const statNameByPetType: { [key: string]: string } = {
+  const statNameByPetType: { [key: Pet]: string } = {
     "unicorn": "HP",
     "dragon": "Attack",
     "griffin": "DEF",
@@ -102,8 +105,6 @@ function PetInput({ setPetState }: {
     name: "candyPrice",
   })
 
-  const petType = form.watch("petType")
-
   function onSubmit(formData: z.infer<typeof formSchema>) {
     const levels = []
     for (const level of formData.levels) {
@@ -111,7 +112,7 @@ function PetInput({ setPetState }: {
         levels.push(parseInt(level))
       }
     }
-    const statGoal = parseInt(formData.statGoal)
+    const statGoal = parseInt(formData.statGoal[formData.petType])
     const sacPrices: {[key: string]: number} = {}
     for (const priceObject of formData.sacPrice) {
       sacPrices[priceObject.tier] = parseInt(priceObject.price)
@@ -128,6 +129,8 @@ function PetInput({ setPetState }: {
       candyPrices,
     )
   }
+
+  const petType = form.watch('petType')
 
   return(
     <Form {...form}>

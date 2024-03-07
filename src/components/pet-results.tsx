@@ -4,8 +4,8 @@ export default function PetResults({ petType, levels, statGoal, sacPrices, candy
   petType: string;
   levels: number[];
   statGoal: number;
-  sacPrices: {[key: string]: number};
-  candyPrices: {[key: string]: number};
+  sacPrices: Record<Tier, number>;
+  candyPrices: Record<Tier, number>;
 }) {
   statGoal = isNaN(statGoal) ? 0 : statGoal
 
@@ -50,7 +50,7 @@ export default function PetResults({ petType, levels, statGoal, sacPrices, candy
 
   const tiers = ["g", "f", "e", "d", "c", "b", "a", "s"]
 
-  const candyPerTier: { [key: string]: number } = {
+  const candyPerTier: Partial<Record<Tier, number>> = {
     "f": 20,
     "e": 20,
     "d": 25,
@@ -59,15 +59,15 @@ export default function PetResults({ petType, levels, statGoal, sacPrices, candy
     "a": 50,
   }
   
-  const costUp: { [key: string]: number } = {}
-  Object.keys(candyPrices).forEach((tier: string) => {
-    costUp[tier] = candyPerTier[tier] * candyPrices[tier]
+  const costUp: Partial<Record<Tier, number>> = {}
+  Object.keys(candyPrices).forEach((tier) => {
+    costUp[tier as Tier] = candyPerTier[tier as Tier] * candyPrices[tier as Tier]
   })
   console.log(costUp)
 
   const costSac = sacPrices
   
-  const levelsPerTier: { [key: string]: number } = {
+  const levelsPerTier: { [key in Tier]: number } = {
     "f": 1,
     "e": 2,
     "d": 3,
@@ -77,7 +77,7 @@ export default function PetResults({ petType, levels, statGoal, sacPrices, candy
     "s": 9,
   }
   
-  const statsByPetType: { [key: string]: number[] } = {
+  const statsByPetType: { [key in Pet]: number[] } = {
     "unicorn": [96, 191, 383, 670, 1053, 1356, 1628, 2539, 3161],
     "dragon": [7, 13, 27, 47, 73, 95, 113, 165, 220],
     "angel": [1, 2, 3, 4, 5, 6, 7, 8, 9],
