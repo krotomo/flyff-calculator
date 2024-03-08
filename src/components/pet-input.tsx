@@ -26,8 +26,15 @@ const formSchema = z.object({
   petType: z.string(),
   levels: z.string(),
   statGoal: z.object({
-    "unicorn": z.string().max(7162),
-    "dragon": z.string().max(500)
+    "unicorn": z.string().max(7182),
+    "dragon": z.string().max(500),
+    "griffin": z.string().max(450),
+    "angel": z.string().max(31),
+    "crab": z.string().max(45),
+    "tiger": z.string().max(75),
+    "lion": z.string().max(75),
+    "rabbit": z.string().max(75),
+    "fox": z.string().max(75),
   }),
   sacPrice: z.array(z.object({
     tier: z.string(),
@@ -38,18 +45,6 @@ const formSchema = z.object({
     price: z.string(),
   }))
 })
-
-const statRange: { [key: string]: { min: number, max: number } } = {
-  "unicorn": { min: 78, max: 7182 },
-  "dragon": { min: 7, max: 500 },
-  "griffin": { min: 6, max: 450 },
-  "angel": { min: 1, max: 31 },
-  "crab": { min: 2, max: 45 },
-  "tiger": { min: 1, max: 75 },
-  "lion": { min: 1, max: 75 },
-  "rabbit": { min: 1, max: 75 },
-  "fox": { min: 1, max: 75 },
-}
 
 function PetInput({ setPetState }: {
   setPetState: (
@@ -77,7 +72,17 @@ function PetInput({ setPetState }: {
     defaultValues: {
       petType: "",
       levels: "",
-      statGoal: "",
+      statGoal: {
+        "unicorn": "",
+        "dragon": "",
+        "griffin": "",
+        "angel": "",
+        "crab": "",
+        "tiger": "",
+        "lion": "",
+        "rabbit": "",
+        "fox": "",
+      },
       sacPrice: [
         { tier: "e", price: "6000000" },
         { tier: "d", price: "20000000" },
@@ -106,13 +111,14 @@ function PetInput({ setPetState }: {
   })
 
   function onSubmit(formData: z.infer<typeof formSchema>) {
+    console.log(formData)
     const levels = []
     for (const level of formData.levels) {
       if (!isNaN(parseInt(level))) {
         levels.push(parseInt(level))
       }
     }
-    const statGoal = parseInt(formData.statGoal[formData.petType])
+    const statGoal = parseInt(formData.statGoal[formData.petType as Pet])
     const sacPrices: {[key: string]: number} = {}
     for (const priceObject of formData.sacPrice) {
       sacPrices[priceObject.tier] = parseInt(priceObject.price)
@@ -130,7 +136,7 @@ function PetInput({ setPetState }: {
     )
   }
 
-  const petType = form.watch('petType')
+  const petType = form.watch('petType') as Pet
 
   return(
     <Form {...form}>
@@ -190,7 +196,7 @@ function PetInput({ setPetState }: {
           />
           <FormField 
             control={form.control}
-            name="statGoal"
+            name={`statGoal.${petType}`}
             render={
               ({ field: { onChange } }) => (
                 <FormItem>

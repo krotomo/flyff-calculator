@@ -1,7 +1,7 @@
 import statesByDepth from "../data/states-by-depth.json"
 
 export default function PetResults({ petType, levels, statGoal, sacPrices, candyPrices }: {
-  petType: string;
+  petType: Pet;
   levels: number[];
   statGoal: number;
   sacPrices: Record<SacTier, number>;
@@ -59,7 +59,7 @@ export default function PetResults({ petType, levels, statGoal, sacPrices, candy
     "a": 50,
   }
   
-  const costUp: Record<RaiseTier, number> = {}
+  const costUp: Record<RaiseTier, number> = {} as Record<RaiseTier, number>
   Object.keys(candyPrices).forEach((tier) => {
     costUp[tier as RaiseTier] = candyPerTier[tier as RaiseTier] * candyPrices[tier as RaiseTier]
   })
@@ -144,10 +144,10 @@ export default function PetResults({ petType, levels, statGoal, sacPrices, candy
   
     addFactor(other: ActionCount, factor: number) {
       for (const tier in other.sac) {
-        this.sac[tier] += other.sac[tier] * factor
+        this.sac[tier as SacTier] += other.sac[tier as SacTier] * factor
       }
       for (const tier in other.up) {
-        this.up[tier] += other.up[tier] * factor
+        this.up[tier as RaiseTier] += other.up[tier as RaiseTier] * factor
       }
     }
   }
@@ -155,13 +155,13 @@ export default function PetResults({ petType, levels, statGoal, sacPrices, candy
   const goodEndActionCount = new ActionCount()
   const badEndActionCount = new ActionCount()
   for (const tier in badEndActionCount.sac) {
-    badEndActionCount.sac[tier] = Infinity
+    badEndActionCount.sac[tier as SacTier] = Infinity
   }
 
   function candyCostFromActionCount(actionCount: ActionCount) {
     let cost = 0
     for (const tier in actionCount.up) {
-      cost += actionCount.up[tier] * costUp[tier]
+      cost += actionCount.up[tier as RaiseTier] * costUp[tier as RaiseTier]
     }
     return cost
   }
@@ -169,7 +169,7 @@ export default function PetResults({ petType, levels, statGoal, sacPrices, candy
   function sacCostFromActionCount(actionCount: ActionCount) {
     let cost = 0
     for (const tier in actionCount.sac) {
-      cost += actionCount.sac[tier] * costSac[tier]
+      cost += actionCount.sac[tier as SacTier] * costSac[tier as SacTier]
     }
     return cost
   }
@@ -181,7 +181,7 @@ export default function PetResults({ petType, levels, statGoal, sacPrices, candy
     return cost
   }
   
-  function calculatePetCost(petType: string, goal: number) {
+  function calculatePetCost(petType: Pet, goal: number) {
     const stateActionCounts: {
       [key: string]: {
         action: string,
@@ -193,8 +193,8 @@ export default function PetResults({ petType, levels, statGoal, sacPrices, candy
       const result = new ActionCount()
       const tier = tiers[state.length]
       if (action === "up") {
-        const upTier: string = tiers[state.length+1]
-        p[upTier][upTier].forEach((pSucc, index) => {
+        const upTier = tiers[state.length+1]
+        p[upTier][upTier]?.forEach((pSucc, index) => {
           const succState: number[] = [...state]
           succState.push(index + 1)
           const succActionCount: ActionCount = stateActionCounts[JSON.stringify(succState)][0].actionCount
@@ -203,17 +203,17 @@ export default function PetResults({ petType, levels, statGoal, sacPrices, candy
           }
           result.addFactor(succActionCount, pSucc)
         })
-        result.up[tier] += 1
+        result.up[tier as RaiseTier] += 1
       }
       else {
         let pSelf = 0
-        p[tier][action].slice(0, state.slice(-1)[0]).forEach((pSelfPart) => pSelf += pSelfPart)
-        p[tier][action].slice(state.slice(-1)[0]).forEach((pSucc, index) => {
+        p[tier][action as SacTier]?.slice(0, state.slice(-1)[0]).forEach((pSelfPart) => pSelf += pSelfPart)
+        p[tier][action as SacTier]?.slice(state.slice(-1)[0]).forEach((pSucc, index) => {
           const succState: number[] = [...state]
           succState[succState.length - 1] = index + state.slice(-1)[0] + 1
           result.addFactor(stateActionCounts[JSON.stringify(succState)][0].actionCount, pSucc/(1-pSelf))
         })
-        result.sac[action] += 1/(1-pSelf)
+        result.sac[action as SacTier] += 1/(1-pSelf)
       }
       return result
     }
@@ -268,7 +268,7 @@ export default function PetResults({ petType, levels, statGoal, sacPrices, candy
         {
           Object.keys(result[0].actionCount.sac).map((tier) => {
             return(
-              result[0].actionCount.sac[tier] > 0 && <div>{tier}: {result[0].actionCount.sac[tier] * costSac[tier]}</div>
+              result[0].actionCount.sac[tier as SacTier] > 0 && <div>{tier}: {result[0].actionCount.sac[tier as SacTier] * costSac[tier as SacTier]}</div>
             )
           })
         }
@@ -278,7 +278,7 @@ export default function PetResults({ petType, levels, statGoal, sacPrices, candy
         {
           Object.keys(result[0].actionCount.up).map((tier) => {
             return(
-              result[0].actionCount.up[tier] > 0 && <div>{tier}: {result[0].actionCount.up[tier] * costUp[tier]}</div>
+              result[0].actionCount.up[tier as RaiseTier] > 0 && <div>{tier}: {result[0].actionCount.up[tier as RaiseTier] * costUp[tier as RaiseTier]}</div>
             )
           })
         }
