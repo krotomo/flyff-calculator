@@ -23,18 +23,52 @@ import {
 import { Button } from "@/components/ui/button"
 
 const formSchema = z.object({
-  petType: z.string(),
+  petType: z.string()
+    .min(1, "Field is required."),
   levels: z.string(),
-  statGoal: z.string(),
+  statGoal: z.string()
+    .min(1, "Field is required.")
+    .refine(
+      (val) => {
+        return(stringIsInteger(val))
+      }, 
+      { message: "Please enter a valid number." }
+    ),
   sacPrice: z.array(z.object({
     tier: z.string(),
-    price: z.string(),
+    price: z.string()
+      .min(1, "Field is required.")
+      .refine(
+        (val) => {
+          return(stringIsInteger(val))
+        }, 
+        { message: "Please enter a valid number." }
+      ),
   })),
   candyPrice: z.array(z.object({
     tier: z.string(),
-    price: z.string(),
+    price: z.string()
+      .min(1, "Field is required.")
+      .refine(
+        (val) => {
+          return(stringIsInteger(val))
+        }, 
+        { message: "Please enter a valid number." }
+      ),
   }))
 })
+  .refine((formData) => {
+    const statGoal = Number(formData.statGoal.replace(/,/g, ""))
+    return !formData.petType || ( statGoal >= 0 && statGoal <= statRange[formData.petType as Pet]?.max )
+  },
+  (formData) => ({
+    message: `Please enter a number between 0 and ${statRange[formData.petType as Pet]?.max}.`,
+    path: ["statGoal"],
+  }))
+
+const stringIsInteger = (val: string) => {
+  return /^\d+$/.test(val.replace(/,/g, ""))
+}
 
 const statRange: Record<Pet, { min: number, max: number }> = {
   "unicorn": { min: 78, max: 7182 },
@@ -73,7 +107,7 @@ function PetInput({ setPetState }: {
     resolver: zodResolver(formSchema),
     defaultValues: {
       petType: "",
-      levels: "",
+      levels: "1/ / / / / / ",
       statGoal: "",
       sacPrice: [
         { tier: "e", price: "6000000" },
@@ -103,6 +137,7 @@ function PetInput({ setPetState }: {
   })
 
   function onSubmit(formData: z.infer<typeof formSchema>) {
+    console.log(formData)
     const levels = []
     for (const level of formData.levels) {
       if (!isNaN(parseInt(level))) {
@@ -126,6 +161,8 @@ function PetInput({ setPetState }: {
       candyPrices,
     )
   }
+
+  
 
   return(
     <Form {...form}>
@@ -197,6 +234,7 @@ function PetInput({ setPetState }: {
                     inputMode="numeric"
                   />
                   </FormControl>
+                  <FormMessage />
                 </FormItem>
               )
             }
@@ -225,6 +263,7 @@ function PetInput({ setPetState }: {
                             customInput={Input}
                           />
                         </FormControl>
+                        <FormMessage />
                       </FormItem>
                     )
                   }
@@ -256,6 +295,7 @@ function PetInput({ setPetState }: {
                             customInput={Input}
                           />
                         </FormControl>
+                        <FormMessage />
                       </FormItem>
                     )
                   }

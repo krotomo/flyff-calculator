@@ -63,7 +63,6 @@ export default function PetResults({ petType, levels, statGoal, sacPrices, candy
   Object.keys(candyPrices).forEach((tier) => {
     costUp[tier as RaiseTier] = candyPerTier[tier as RaiseTier] * candyPrices[tier as RaiseTier]
   })
-  console.log(costUp)
 
   const costSac = sacPrices
   
