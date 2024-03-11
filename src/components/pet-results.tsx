@@ -1,4 +1,9 @@
 import statesByDepth from "../data/states-by-depth.json"
+import { numericFormatter } from "react-number-format";
+
+const numberFormat = new Intl.NumberFormat("en-us")
+
+const formatThousands = (inputValue: number) => numberFormat.format(Math.round(inputValue))
 
 export default function PetResults({ petType, levels, statGoal, sacPrices, candyPrices }: {
   petType: Pet;
@@ -260,24 +265,34 @@ export default function PetResults({ petType, levels, statGoal, sacPrices, candy
   return (
     <div>
       <div>
-        <h2>Total Cost: { costFromActionCount(result[0].actionCount) }</h2>
+        <h2>
+          Total Cost: { formatThousands(costFromActionCount(result[0].actionCount)) }
+        </h2>
       </div>
       <div>
-        <h3>Sac Pet Cost: { sacCostFromActionCount(result[0].actionCount) }</h3>
+        <h3>
+          Sac Pet Cost: { formatThousands(sacCostFromActionCount(result[0].actionCount)) }
+        </h3>
         {
           Object.keys(result[0].actionCount.sac).map((tier) => {
             return(
-              result[0].actionCount.sac[tier as SacTier] > 0 && <div>{tier}: {result[0].actionCount.sac[tier as SacTier] * costSac[tier as SacTier]}</div>
+              result[0].actionCount.sac[tier as SacTier] > 0 && 
+              <div>
+                {tier}: { formatThousands(result[0].actionCount.sac[tier as SacTier] * costSac[tier as SacTier]) }
+              </div>
             )
           })
         }
       </div>
       <div>
-        <h3>Pet Candy Cost: { candyCostFromActionCount(result[0].actionCount) }</h3>
+        <h3>Pet Candy Cost: { formatThousands(candyCostFromActionCount(result[0].actionCount)) }</h3>
         {
           Object.keys(result[0].actionCount.up).map((tier) => {
             return(
-              result[0].actionCount.up[tier as RaiseTier] > 0 && <div>{tier}: {result[0].actionCount.up[tier as RaiseTier] * costUp[tier as RaiseTier]}</div>
+              result[0].actionCount.up[tier as RaiseTier] > 0 && 
+              <div>
+                {tier}: { formatThousands(result[0].actionCount.up[tier as RaiseTier] * costUp[tier as RaiseTier]) }
+              </div>
             )
           })
         }
