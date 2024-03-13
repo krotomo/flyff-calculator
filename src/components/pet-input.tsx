@@ -21,6 +21,7 @@ import {
   FormMessage,
 } from "@/components/ui/form"
 import { Button } from "@/components/ui/button"
+import { Card } from "@/components/ui/card"
 
 const formSchema = z.object({
   petType: z.string()
@@ -58,13 +59,17 @@ const formSchema = z.object({
   }))
 })
   .refine((formData) => {
-    const statGoal = Number(formData.statGoal.replace(/,/g, ""))
+    const statGoal = stringToInteger(formData.statGoal)
     return !formData.petType || ( statGoal >= 0 && statGoal <= statRange[formData.petType as Pet]?.max )
   },
   (formData) => ({
     message: `Please enter a number between 0 and ${statRange[formData.petType as Pet]?.max}.`,
     path: ["statGoal"],
   }))
+
+const stringToInteger = (val: string) => {
+  return Number(val.replace(/,/g, ""))
+}
 
 const stringIsInteger = (val: string) => {
   return /^\d+$/.test(val.replace(/,/g, ""))
@@ -144,14 +149,14 @@ function PetInput({ setPetState }: {
         levels.push(parseInt(level))
       }
     }
-    const statGoal = parseInt(formData.statGoal)
+    const statGoal = stringToInteger(formData.statGoal)
     const sacPrices: {[key: string]: number} = {}
     for (const priceObject of formData.sacPrice) {
-      sacPrices[priceObject.tier] = parseInt(priceObject.price)
+      sacPrices[priceObject.tier] = stringToInteger(priceObject.price)
     }
     const candyPrices: {[key: string]: number} = {}
     for (const priceObject of formData.candyPrice) {
-      candyPrices[priceObject.tier] = parseInt(priceObject.price)
+      candyPrices[priceObject.tier] = stringToInteger(priceObject.price)
     }
     setPetState(
       formData.petType,
@@ -167,7 +172,8 @@ function PetInput({ setPetState }: {
   return(
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)}>
-        <h2>Pet Info</h2>
+        <Card className="m-2 p-2">
+          <h2>Pet Info</h2>
           <FormField
             control={form.control}
             name="petType"
@@ -182,15 +188,15 @@ function PetInput({ setPetState }: {
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="unicorn">Unicorn</SelectItem>
-                      <SelectItem value="dragon">Dragon</SelectItem>
-                      <SelectItem value="griffin">Griffin</SelectItem>
-                      <SelectItem value="angel">Angel</SelectItem>
-                      <SelectItem value="crab">Crab</SelectItem>
-                      <SelectItem value="tiger">Tiger</SelectItem>
-                      <SelectItem value="lion">Lion</SelectItem>
-                      <SelectItem value="rabbit">Rabbit</SelectItem>
-                      <SelectItem value="fox">Fox</SelectItem>
+                      <SelectItem value="unicorn">Unicorn - HP</SelectItem>
+                      <SelectItem value="dragon">Dragon - Attack</SelectItem>
+                      <SelectItem value="griffin">Griffin - Defense</SelectItem>
+                      <SelectItem value="angel">Angel - Critical Chance</SelectItem>
+                      <SelectItem value="crab">Crab - Critical Damage</SelectItem>
+                      <SelectItem value="tiger">Tiger - STR</SelectItem>
+                      <SelectItem value="lion">Lion - STA</SelectItem>
+                      <SelectItem value="rabbit">Rabbit - DEX</SelectItem>
+                      <SelectItem value="fox">Fox - INT</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -216,6 +222,7 @@ function PetInput({ setPetState }: {
                       customInput={Input}
                     />
                   </FormControl>
+                  <FormMessage />
                 </FormItem>
               )
             }
@@ -239,72 +246,77 @@ function PetInput({ setPetState }: {
               )
             }
           />
-        <h2>Prices</h2>
-        <h3>Sac Pets</h3>
-        <div>
-          {
-            sacPriceFields.map((field, index: number) => {
-              return (              
-                <FormField
-                  key={`sacPrice.${field.tier}`}
-                  control={form.control}
-                  name={`sacPrice.${index}.price`}
-                  render={
-                    ({ field: { onChange, value } }) => (
-                      <FormItem>
-                        <FormLabel className="capitalize">{field.tier}</FormLabel>
-                        <FormControl>
-                          <NumericFormat
-                            onChange={onChange}
-                            value={value}
-                            type="text"
-                            thousandsGroupStyle="thousand"
-                            thousandSeparator=","
-                            customInput={Input}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )
-                  }
-                />
-              )
-            })
-          }
-        </div>
-        <h3>Pet Candy</h3>
-        <div>
-          {
-            candyPriceFields.map((field, index: number) => {
-              return (              
-                <FormField
-                  key={`candyPrice.${field.tier}`}
-                  control={form.control}
-                  name={`candyPrice.${index}.price`}
-                  render={
-                    ({ field: { onChange, value }}) => (
-                      <FormItem>
-                        <FormLabel className="capitalize">{field.tier}</FormLabel>
-                        <FormControl>
-                          <NumericFormat 
-                            onChange={onChange}
-                            value={value}
-                            type="text"
-                            thousandsGroupStyle="thousand"
-                            thousandSeparator=","
-                            customInput={Input}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )
-                  }
-                />
-              )
-            })
-          }
-        </div>
-        <Button type="submit">Calculate</Button>
+          <Button type="submit">Calculate</Button>
+        </Card>
+        <Card className="m-2 p-2">
+          <h2>Prices</h2>
+          <div className="flex justify-center">
+            <div className="flex-1 pr-1">
+              <h3>Sac Pets</h3>
+              {
+                sacPriceFields.map((field, index: number) => {
+                  return (              
+                    <FormField
+                      key={`sacPrice.${field.tier}`}
+                      control={form.control}
+                      name={`sacPrice.${index}.price`}
+                      render={
+                        ({ field: { onChange, value } }) => (
+                          <FormItem>
+                            <FormLabel className="capitalize">{field.tier}</FormLabel>
+                            <FormControl>
+                              <NumericFormat
+                                onChange={onChange}
+                                value={value}
+                                type="text"
+                                thousandsGroupStyle="thousand"
+                                thousandSeparator=","
+                                customInput={Input}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )
+                      }
+                    />
+                  )
+                })
+              }
+            </div>
+            <div className="flex-1 pl-1">
+              <h3>Pet Candy</h3>
+              {
+                candyPriceFields.map((field, index: number) => {
+                  return (              
+                    <FormField
+                      key={`candyPrice.${field.tier}`}
+                      control={form.control}
+                      name={`candyPrice.${index}.price`}
+                      render={
+                        ({ field: { onChange, value }}) => (
+                          <FormItem>
+                            <FormLabel className="capitalize">{field.tier}</FormLabel>
+                            <FormControl>
+                              <NumericFormat 
+                                onChange={onChange}
+                                value={value}
+                                type="text"
+                                thousandsGroupStyle="thousand"
+                                thousandSeparator=","
+                                customInput={Input}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )
+                      }
+                    />
+                  )
+                })
+              }
+            </div>
+          </div>
+        </Card>
       </form>
     </Form>
   )

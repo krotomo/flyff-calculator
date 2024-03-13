@@ -1,5 +1,4 @@
 import statesByDepth from "../data/states-by-depth.json"
-import { numericFormatter } from "react-number-format";
 
 const numberFormat = new Intl.NumberFormat("en-us")
 
@@ -108,7 +107,7 @@ export default function PetResults({ petType, levels, statGoal, sacPrices, candy
     return result
   }
   
-  function statsTotal(state: number[], petType: Pet): number {
+  function statsTotal(state: number[]): number {
     let sum = 0
     for (const level of state) {
       sum += statsByPetType[petType][level-1]
@@ -116,15 +115,15 @@ export default function PetResults({ petType, levels, statGoal, sacPrices, candy
     return sum
   }
   
-  function isGoodEnd(state: number[], petType: Pet, goal: number): boolean {
-    return statsTotal(state, petType) >= goal
+  function isGoodEnd(state: number[], goal: number): boolean {
+    return statsTotal(state) >= goal
   }
   
-  function isBadEnd(state: number[], petType: Pet, goal: number): boolean {
+  function isBadEnd(state: number[], goal: number): boolean {
     return (
       tiers[state.length] == "s" &&
       state.slice(-1)[0] == 9 &&
-      statsTotal(state, petType) < goal
+      statsTotal(state) < goal
     )
   }
   
@@ -185,7 +184,7 @@ export default function PetResults({ petType, levels, statGoal, sacPrices, candy
     return cost
   }
   
-  function calculatePetCost(petType: Pet, goal: number) {
+  function calculatePetCost(goal: number) {
     const stateActionCounts: {
       [key: string]: {
         action: string,
@@ -224,13 +223,13 @@ export default function PetResults({ petType, levels, statGoal, sacPrices, candy
   
     for (let depth: number = statesByDepth.length-1; depth >= 0; depth--) {
       for (const state of statesByDepth[depth]) {
-        if (isGoodEnd(state, petType, goal)) {
+        if (isGoodEnd(state, goal)) {
           stateActionCounts[JSON.stringify(state)] = [{
             action: "none",
             actionCount: goodEndActionCount
           }]
         }
-        else if (isBadEnd(state, petType, goal)) {
+        else if (isBadEnd(state, goal)) {
           stateActionCounts[JSON.stringify(state)] = [{
             action: "none",
             actionCount: badEndActionCount
@@ -260,10 +259,10 @@ export default function PetResults({ petType, levels, statGoal, sacPrices, candy
     return stateActionCounts
   }
 
-  const result = calculatePetCost(petType, statGoal)[JSON.stringify(levels)]
+  const result = calculatePetCost(statGoal)[JSON.stringify(levels)]
 
   return (
-    <div>
+    <div className="basis-1/2">
       <div>
         <h2>
           Total Cost: { formatThousands(costFromActionCount(result[0].actionCount)) }

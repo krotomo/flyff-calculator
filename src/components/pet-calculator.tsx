@@ -30,18 +30,25 @@ export default function PetCalculator() {
   return(
     <div>
       <h1>Pet Cost Calculator</h1>
-      <PetInput
-        setPetState={setPetState}
-      ></PetInput>
-      {showResults &&
-        <PetResults
-          petType={petType}
-          levels={levels}
-          statGoal={statGoal}
-          sacPrices={sacPrices}
-          candyPrices={candyPrices}
-        ></PetResults>
-      }
+      <div className="flex justify-center">
+        <div className="basis-1/2 max-w-md">
+          <PetInput
+            setPetState={setPetState}
+          ></PetInput>
+        </div>
+        {showResults &&
+          <PetResults
+            petType={petType}
+            levels={levels}
+            statGoal={statGoal}
+            sacPrices={sacPrices}
+            candyPrices={candyPrices}
+          ></PetResults>
+        }
+        {!showResults &&
+          <div className="basis-1/2 max-w-md" />
+        }
+      </div>
     </div>
   )
 }
