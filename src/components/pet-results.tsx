@@ -4,10 +4,11 @@ const numberFormat = new Intl.NumberFormat("en-us")
 
 const formatThousands = (inputValue: number) => numberFormat.format(Math.round(inputValue))
 
-export default function PetResults({ petType, levels, statGoal, sacPrices, candyPrices }: {
+export default function PetResults({ petType, levels, statGoal, levelsGoal, sacPrices, candyPrices }: {
   petType: Pet;
   levels: number[];
   statGoal: number;
+  levelsGoal: number[];
   sacPrices: Record<SacTier, number>;
   candyPrices: Record<RaiseTier, number>;
 }) {
@@ -115,15 +116,28 @@ export default function PetResults({ petType, levels, statGoal, sacPrices, candy
     return sum
   }
   
-  function isGoodEnd(state: number[], goal: number): boolean {
-    return statsTotal(state) >= goal
+  function isGoodEnd(state: number[]): boolean {
+    if (levelsGoal.length > state.length) {
+      return false
+    }
+    for (const [index, level] of levelsGoal.entries()) {
+      if (level < state[index]) {
+        return false
+      }
+    }
+    return statsTotal(state) >= statGoal
   }
   
-  function isBadEnd(state: number[], goal: number): boolean {
+  function isBadEnd(state: number[]): boolean {
+    for (const [index, level] of state.entries()) {
+      if (index < state.length -1 && level < levelsGoal[index]) {
+        return true
+      }
+    }
     return (
       tiers[state.length] == "s" &&
       state.slice(-1)[0] == 9 &&
-      statsTotal(state) < goal
+      statsTotal(state) < statGoal
     )
   }
   
@@ -223,13 +237,13 @@ export default function PetResults({ petType, levels, statGoal, sacPrices, candy
   
     for (let depth: number = statesByDepth.length-1; depth >= 0; depth--) {
       for (const state of statesByDepth[depth]) {
-        if (isGoodEnd(state, goal)) {
+        if (isGoodEnd(state)) {
           stateActionCounts[JSON.stringify(state)] = [{
             action: "none",
             actionCount: goodEndActionCount
           }]
         }
-        else if (isBadEnd(state, goal)) {
+        else if (isBadEnd(state)) {
           stateActionCounts[JSON.stringify(state)] = [{
             action: "none",
             actionCount: badEndActionCount
