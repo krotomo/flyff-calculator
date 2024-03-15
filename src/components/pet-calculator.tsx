@@ -8,6 +8,7 @@ export default function PetCalculator() {
   const [ petType, setPetType ] = useState<string>()
   const [ levels, setLevels ] = useState<number[]>()
   const [ statGoal, setStatGoal ] = useState<number>()
+  const [ levelsGoal, setLevelsGoal ] = useState<number[]>()
   const [ sacPrices, setSacPrices ] = useState<{[key: string]: number}>()
   const [ candyPrices, setCandyPrices ] = useState<{[key: string]: number}>()
 
@@ -15,12 +16,14 @@ export default function PetCalculator() {
     newPetType: string, 
     newLevels: number[], 
     newStatGoal: number, 
+    newLevelsGoal: number[],
     newSacPrices: {[key: string]: number},
     newCandyPrices: {[key: string]: number},
   ) {
     setPetType(newPetType)
     setLevels(newLevels)
     setStatGoal(newStatGoal)
+    setLevelsGoal(newLevelsGoal)
     setSacPrices(newSacPrices)
     setCandyPrices(newCandyPrices)
     setShowResults(true)
@@ -41,6 +44,7 @@ export default function PetCalculator() {
             petType={petType}
             levels={levels}
             statGoal={statGoal}
+            levelsGoal={levelsGoal}
             sacPrices={sacPrices}
             candyPrices={candyPrices}
           ></PetResults>

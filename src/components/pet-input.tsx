@@ -35,6 +35,7 @@ const formSchema = z.object({
       }, 
       { message: "Please enter a valid number." }
     ),
+  levelsGoal: z.string(),
   sacPrice: z.array(z.object({
     tier: z.string(),
     price: z.string()
@@ -92,6 +93,7 @@ function PetInput({ setPetState }: {
     petType: string, 
     levels: number[], 
     statGoal: number, 
+    levelsGoal: number[],
     sacPrices: {[key: string]: number}, 
     candyPrices: {[key: string]: number}
   ) => void;
@@ -114,6 +116,7 @@ function PetInput({ setPetState }: {
       petType: "",
       levels: "1/ / / / / / ",
       statGoal: "",
+      levelsGoal: "1/ / / / / / ",
       sacPrice: [
         { tier: "e", price: "6000000" },
         { tier: "d", price: "20000000" },
@@ -150,6 +153,12 @@ function PetInput({ setPetState }: {
       }
     }
     const statGoal = stringToInteger(formData.statGoal)
+    const levelsGoal = []
+    for (const level of formData.levelsGoal) {
+      if (!isNaN(parseInt(level))) {
+        levelsGoal.push(parseInt(level))
+      }
+    }
     const sacPrices: {[key: string]: number} = {}
     for (const priceObject of formData.sacPrice) {
       sacPrices[priceObject.tier] = stringToInteger(priceObject.price)
@@ -162,6 +171,7 @@ function PetInput({ setPetState }: {
       formData.petType,
       levels,
       statGoal,
+      levelsGoal,
       sacPrices,
       candyPrices,
     )
@@ -240,6 +250,29 @@ function PetInput({ setPetState }: {
                     type="text"
                     inputMode="numeric"
                   />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )
+            }
+          />
+          <FormField
+            control={form.control}
+            name="levelsGoal"
+            render={
+              ({ field: { onChange, value } }) => (
+                <FormItem>
+                  <FormLabel>Levels Goal</FormLabel>
+                  <FormControl>
+                    <PatternFormat 
+                      id="levelsGoal"
+                      onChange={onChange}
+                      value={value}
+                      type="text"
+                      allowEmptyFormatting
+                      format="1/#/#/#/#/#/#"
+                      customInput={Input}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

@@ -121,10 +121,11 @@ export default function PetResults({ petType, levels, statGoal, levelsGoal, sacP
       return false
     }
     for (const [index, level] of levelsGoal.entries()) {
-      if (level < state[index]) {
+      if (state[index] < level) {
         return false
       }
     }
+    console.log(state)
     return statsTotal(state) >= statGoal
   }
   
@@ -198,7 +199,7 @@ export default function PetResults({ petType, levels, statGoal, levelsGoal, sacP
     return cost
   }
   
-  function calculatePetCost(goal: number) {
+  function calculatePetCost() {
     const stateActionCounts: {
       [key: string]: {
         action: string,
@@ -273,7 +274,7 @@ export default function PetResults({ petType, levels, statGoal, levelsGoal, sacP
     return stateActionCounts
   }
 
-  const result = calculatePetCost(statGoal)[JSON.stringify(levels)]
+  const result = calculatePetCost()[JSON.stringify(levels)]
 
   return (
     <div className="basis-1/2">
