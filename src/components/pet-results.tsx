@@ -1,3 +1,4 @@
+import { stat } from "fs";
 import statesByDepth from "../data/states-by-depth.json"
 
 const numberFormat = new Intl.NumberFormat("en-us")
@@ -125,7 +126,6 @@ export default function PetResults({ petType, levels, statGoal, levelsGoal, sacP
         return false
       }
     }
-    console.log(state)
     return statsTotal(state) >= statGoal
   }
   
@@ -175,6 +175,9 @@ export default function PetResults({ petType, levels, statGoal, levelsGoal, sacP
   for (const tier in badEndActionCount.sac) {
     badEndActionCount.sac[tier as SacTier] = Infinity
   }
+  for (const tier in badEndActionCount.up) {
+    badEndActionCount.up[tier as RaiseTier] = Infinity
+  }
 
   function candyCostFromActionCount(actionCount: ActionCount) {
     let cost = 0
@@ -212,7 +215,7 @@ export default function PetResults({ petType, levels, statGoal, levelsGoal, sacP
       const tier = tiers[state.length]
       if (action === "up") {
         const upTier = tiers[state.length+1]
-        p[upTier][upTier]?.forEach((pSucc, index) => {
+        for (const [index, pSucc] of p[upTier]![upTier]!.entries()) {
           const succState: number[] = [...state]
           succState.push(index + 1)
           const succActionCount: ActionCount = stateActionCounts[JSON.stringify(succState)][0].actionCount
@@ -220,7 +223,7 @@ export default function PetResults({ petType, levels, statGoal, levelsGoal, sacP
             return badEndActionCount
           }
           result.addFactor(succActionCount, pSucc)
-        })
+        }
         result.up[tier as RaiseTier] += 1
       }
       else {
@@ -274,7 +277,8 @@ export default function PetResults({ petType, levels, statGoal, levelsGoal, sacP
     return stateActionCounts
   }
 
-  const result = calculatePetCost()[JSON.stringify(levels)]
+  const results = calculatePetCost()
+  const result = results[JSON.stringify(levels)]
 
   return (
     <div className="basis-1/2">
