@@ -7,6 +7,7 @@ export default function PetCalculator() {
   const [ showResults, setShowResults ] = useState<boolean>(false)
   const [ petType, setPetType ] = useState<string>()
   const [ levels, setLevels ] = useState<number[]>()
+  const [ exp, setExp ] = useState<number>()
   const [ statGoal, setStatGoal ] = useState<number>()
   const [ levelsGoal, setLevelsGoal ] = useState<number[]>()
   const [ sacPrices, setSacPrices ] = useState<{[key: string]: number}>()
@@ -15,6 +16,7 @@ export default function PetCalculator() {
   function setPetState(
     newPetType: string, 
     newLevels: number[], 
+    newExp: number,
     newStatGoal: number, 
     newLevelsGoal: number[],
     newSacPrices: {[key: string]: number},
@@ -22,6 +24,7 @@ export default function PetCalculator() {
   ) {
     setPetType(newPetType)
     setLevels(newLevels)
+    setExp(newExp)
     setStatGoal(newStatGoal)
     setLevelsGoal(newLevelsGoal)
     setSacPrices(newSacPrices)
@@ -34,7 +37,7 @@ export default function PetCalculator() {
     <div>
       <h1>Pet Cost Calculator</h1>
       <div className="flex justify-center">
-        <div className="basis-1/2 max-w-md">
+        <div className="basis-1/3 max-w-md">
           <PetInput
             setPetState={setPetState}
           ></PetInput>
@@ -50,7 +53,7 @@ export default function PetCalculator() {
           ></PetResults>
         }
         {!showResults &&
-          <div className="basis-1/2 max-w-md" />
+          <div className="basis-2/3 max-w-md" />
         }
       </div>
     </div>

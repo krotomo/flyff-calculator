@@ -1,4 +1,3 @@
-import { stat } from "fs";
 import statesByDepth from "../data/states-by-depth.json"
 
 const numberFormat = new Intl.NumberFormat("en-us")
