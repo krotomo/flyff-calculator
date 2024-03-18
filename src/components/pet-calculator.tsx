@@ -46,6 +46,7 @@ export default function PetCalculator() {
           <PetResults
             petType={petType}
             levels={levels}
+            exp={exp}
             statGoal={statGoal}
             levelsGoal={levelsGoal}
             sacPrices={sacPrices}

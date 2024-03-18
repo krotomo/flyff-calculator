@@ -4,9 +4,10 @@ const numberFormat = new Intl.NumberFormat("en-us")
 
 const formatThousands = (inputValue: number) => numberFormat.format(Math.round(inputValue))
 
-export default function PetResults({ petType, levels, statGoal, levelsGoal, sacPrices, candyPrices }: {
+export default function PetResults({ petType, levels, exp, statGoal, levelsGoal, sacPrices, candyPrices }: {
   petType: Pet;
   levels: number[];
+  exp: number;
   statGoal: number;
   levelsGoal: number[];
   sacPrices: Record<SacTier, number>;
@@ -66,7 +67,13 @@ export default function PetResults({ petType, levels, statGoal, levelsGoal, sacP
   
   const costUp: Record<RaiseTier, number> = {} as Record<RaiseTier, number>
   Object.keys(candyPrices).forEach((tier) => {
-    costUp[tier as RaiseTier] = candyPerTier[tier as RaiseTier] * candyPrices[tier as RaiseTier]
+    if (tier === tiers[levels.length]) {
+      costUp[tier as RaiseTier] = Math.round( candyPerTier[tier as RaiseTier] * (1-(exp/100)) ) * candyPrices[tier as RaiseTier]
+    }
+    else {
+      costUp[tier as RaiseTier] = candyPerTier[tier as RaiseTier] * candyPrices[tier as RaiseTier]
+    }
+
   })
 
   const costSac = sacPrices
@@ -130,7 +137,7 @@ export default function PetResults({ petType, levels, statGoal, levelsGoal, sacP
   
   function isBadEnd(state: number[]): boolean {
     for (const [index, level] of state.entries()) {
-      if (index < state.length -1 && level < levelsGoal[index]) {
+      if (index < state.length-1 && level < levelsGoal[index]) {
         return true
       }
     }
@@ -261,7 +268,10 @@ export default function PetResults({ petType, levels, statGoal, levelsGoal, sacP
             })
           }
           newStateActionCounts.sort((a, b) => {
-            if (costFromActionCount(a.actionCount) < costFromActionCount(b.actionCount)) {
+            if (
+              isNaN(costFromActionCount(b.actionCount)) || 
+              costFromActionCount(a.actionCount) < costFromActionCount(b.actionCount)
+            ) {
               return -1
             }
             else {

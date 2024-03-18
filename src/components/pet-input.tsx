@@ -35,18 +35,18 @@ const formSchema = z.object({
     .min(1, "Field is required."),
   levels: z.string()
     .regex(
-      /^(1)/,
+      /^(?!\s).+/,
       "Field is required."
     )
     .regex(
-      /^(1)\/([1-2]| )\/([1-3]| )\/([1-4]| )\/([1-5]| )\/([1-7]| )\/([1-9]| )$/,
+      /^(1| )\/([1-2]| )\/([1-3]| )\/([1-4]| )\/([1-5]| )\/([1-7]| )\/([1-9]| )$/,
       "Please enter valid levels."
     ),
   exp: z.string()
     .refine(
       (val) => {
         if (!val) return true
-        const expNumber = parseInt(val)
+        const expNumber = parseFloat(val)
         return(expNumber >= 0 && expNumber <= 100)
       }, 
       { message: "Must be between 0 and 100." }
@@ -182,8 +182,8 @@ function PetInput({ setPetState }: {
         levels.push(parseInt(level))
       }
     }
-    const statGoal = stringToInteger(formData.statGoal)
-    const exp = stringToInteger(formData.exp)
+    const statGoal = parseInt(formData.statGoal)
+    const exp = parseFloat(formData.exp)
     const levelsGoal = levelsStringToArray(formData.levelsGoal)
     const sacPrices: {[key: string]: number} = {}
     for (const priceObject of formData.sacPrice) {
@@ -205,6 +205,8 @@ function PetInput({ setPetState }: {
   }
 
   const petType: Pet = form.watch("petType") as Pet
+  const statGoal: string = form.watch("statGoal")
+  const levelsGoal: string = form.watch("levelsGoal")
 
   return(
     <Form {...form}>
@@ -351,7 +353,7 @@ function PetInput({ setPetState }: {
                 />
               </div>
             </div>
-            <Button type="submit">Calculate</Button>
+            <Button type="submit" disabled={!statGoal && (!levelsGoal || levelsGoal.startsWith(" "))}>Calculate</Button>
           </CardContent>
         </Card>
         <Card className="m-2">
