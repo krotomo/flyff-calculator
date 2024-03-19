@@ -7,9 +7,9 @@ const formatThousands = (inputValue: number) => numberFormat.format(Math.round(i
 export default function PetResults({ petType, levels, exp, statGoal, levelsGoal, sacPrices, candyPrices }: {
   petType: Pet;
   levels: number[];
-  exp: number | undefined;
-  statGoal: number | undefined;
-  levelsGoal: number[] | undefined;
+  exp: number;
+  statGoal: number;
+  levelsGoal: number[];
   sacPrices: Record<SacTier, number>;
   candyPrices: Record<RaiseTier, number>;
 }) {
@@ -132,7 +132,8 @@ export default function PetResults({ petType, levels, exp, statGoal, levelsGoal,
         }
       }
     }
-    return statsTotal(state) >= statGoal!
+    if (!statGoal) return true
+    else return statsTotal(state) >= statGoal!
   }
   
   function isBadEnd(state: number[]): boolean {
@@ -144,7 +145,7 @@ export default function PetResults({ petType, levels, exp, statGoal, levelsGoal,
     return (
       tiers[state.length] == "s" &&
       state.slice(-1)[0] == 9 &&
-      statsTotal(state) < statGoal!
+      statsTotal(state) < statGoal
     )
   }
   
