@@ -35,11 +35,7 @@ const formSchema = z.object({
     .min(1, "Field is required."),
   levels: z.string()
     .regex(
-      /^(?!\s).+/,
-      "Field is required."
-    )
-    .regex(
-      /^(1| )\/([1-2]| )\/([1-3]| )\/([1-4]| )\/([1-5]| )\/([1-7]| )\/([1-9]| )$/,
+      /(^$)|(^(1| )\/([1-2]| )\/([1-3]| )\/([1-4]| )\/([1-5]| )\/([1-7]| )\/([1-9]| )$)/,
       "Please enter valid levels."
     ),
   exp: z.string()
@@ -118,13 +114,13 @@ const statRange: Record<Pet, { min: number, max: number }> = {
 
 function PetInput({ setPetState }: {
   setPetState: (
-    petType: string, 
+    petType: Pet, 
     levels: number[], 
     exp: number,
     statGoal: number, 
     levelsGoal: number[],
-    sacPrices: {[key: string]: number}, 
-    candyPrices: {[key: string]: number}
+    sacPrices: Record<SacTier, number>, 
+    candyPrices: Record<RaiseTier, number>,
   ) => void;
 }) {
   const statNameByPetType: Record<Pet, string> = {
@@ -185,16 +181,17 @@ function PetInput({ setPetState }: {
     const statGoal = parseInt(formData.statGoal)
     const exp = parseFloat(formData.exp)
     const levelsGoal = levelsStringToArray(formData.levelsGoal)
-    const sacPrices: {[key: string]: number} = {}
+    const sacPrices: Record<SacTier, number> = {} as Record<SacTier, number>
     for (const priceObject of formData.sacPrice) {
-      sacPrices[priceObject.tier] = stringToInteger(priceObject.price)
+      sacPrices[priceObject.tier as SacTier] = stringToInteger(priceObject.price)
     }
-    const candyPrices: {[key: string]: number} = {}
+    const candyPrices: Record<RaiseTier, number> = {} as Record<RaiseTier, number>
     for (const priceObject of formData.candyPrice) {
-      candyPrices[priceObject.tier] = stringToInteger(priceObject.price)
+      candyPrices[priceObject.tier as RaiseTier] = stringToInteger(priceObject.price)
     }
+    candyPrices["egg"] = candyPrices["f"]
     setPetState(
-      formData.petType,
+      formData.petType as Pet,
       levels,
       exp,
       statGoal,

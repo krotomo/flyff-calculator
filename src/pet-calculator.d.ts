@@ -3,10 +3,10 @@ type Pet =
   "crab" | "tiger" | "lion" | "rabbit" | "fox";
 
 type Tier =
-  "f" | "e" | "d" | "c" | "b" | "a" | "s"
+  "egg" | "f" | "e" | "d" | "c" | "b" | "a" | "s"
 
 type SacTier =
-  Exclude<Tier, "f">
+  Exclude<Tier, "egg" | "f">
 
 type RaiseTier =
   Exclude<Tier, "s">
@@ -21,6 +21,7 @@ declare class ActionCount {
     "s": 0,
   }
   up: Record<RaiseTier, number> = {
+    "egg": 0,
     "f": 0,
     "e": 0,
     "d": 0,

@@ -5,22 +5,22 @@ import { useState } from "react"
 export default function PetCalculator() {
   // form state
   const [ showResults, setShowResults ] = useState<boolean>(false)
-  const [ petType, setPetType ] = useState<string>()
+  const [ petType, setPetType ] = useState<Pet>()
   const [ levels, setLevels ] = useState<number[]>()
   const [ exp, setExp ] = useState<number>()
   const [ statGoal, setStatGoal ] = useState<number>()
   const [ levelsGoal, setLevelsGoal ] = useState<number[]>()
-  const [ sacPrices, setSacPrices ] = useState<{[key: string]: number}>()
-  const [ candyPrices, setCandyPrices ] = useState<{[key: string]: number}>()
+  const [ sacPrices, setSacPrices ] = useState<Record<SacTier, number>>()
+  const [ candyPrices, setCandyPrices ] = useState<Record<RaiseTier, number>>()
 
   function setPetState(
-    newPetType: string, 
+    newPetType: Pet, 
     newLevels: number[], 
     newExp: number,
     newStatGoal: number, 
     newLevelsGoal: number[],
-    newSacPrices: {[key: string]: number},
-    newCandyPrices: {[key: string]: number},
+    newSacPrices: Record<SacTier, number>,
+    newCandyPrices: Record<RaiseTier, number>,
   ) {
     setPetType(newPetType)
     setLevels(newLevels)

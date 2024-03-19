@@ -4,6 +4,9 @@ const formatThousands = (inputValue: number) => numberFormat.format(Math.round(i
 
 // Table of probabilities for pet sacrificing
 const p: Record<Tier, Partial<Record<Tier, number[]>>> = {
+  "egg": {
+    "egg": [],
+  },
   "f": {
       "f": [1],
   },
@@ -42,9 +45,10 @@ const p: Record<Tier, Partial<Record<Tier, number[]>>> = {
   }
 }
 
-const tiers: Tier[] = ["f", "f", "e", "d", "c", "b", "a", "s"]
+const tiers: Tier[] = ["egg", "f", "e", "d", "c", "b", "a", "s"]
 
 const candyPerTier: Record<RaiseTier, number> = {
+  "egg": 10,
   "f": 20,
   "e": 20,
   "d": 25,
@@ -54,6 +58,7 @@ const candyPerTier: Record<RaiseTier, number> = {
 }
 
 const levelsPerTier: { [key in Tier]: number } = {
+  "egg": 1,
   "f": 1,
   "e": 2,
   "d": 3,
@@ -77,14 +82,14 @@ const statsByPetType: { [key in Pet]: number[] } = {
 
 // Array of pet level states. Sorted into arrays by depth so our algorithm is fast.
 const statesByDepth: number[][][] = []
-let nextDepth: number[][] = [[1]]
+let nextDepth: number[][] = [[]]
 do {
   statesByDepth.push([...nextDepth])
   const thisDepth = nextDepth
   nextDepth = []
   for (const state of thisDepth) {
     const tier = tiers[state.length]
-    if (state.slice(-1)[0] !== levelsPerTier[tier]) {
+    if (tier !== "egg" && state.slice(-1)[0] !== levelsPerTier[tier]) {
       const newState = [...state]
       newState[newState.length-1] = state.slice(-1)[0] + 1
       nextDepth.push(newState)
@@ -124,6 +129,7 @@ export default function PetResults({ petType, levels, exp, statGoal, levelsGoal,
     const result: string[] = []
     if (tier !== "s") result.push("up")
     if (
+      tier !== "egg" &&
       tier !== "f" && 
       state.slice(-1)[0] < levelsPerTier[tier]
     ) {
@@ -180,6 +186,7 @@ export default function PetResults({ petType, levels, exp, statGoal, levelsGoal,
       "s": 0,
     }
     up: Record<RaiseTier, number> = {
+      "egg": 0,
       "f": 0,
       "e": 0,
       "d": 0,
