@@ -1,7 +1,8 @@
+// Number formatting
 const numberFormat = new Intl.NumberFormat("en-us")
-
 const formatThousands = (inputValue: number) => numberFormat.format(Math.round(inputValue))
 
+// Table of probabilities for pet sacrificing
 const p: Record<Tier, Partial<Record<Tier, number[]>>> = {
   "f": {
       "f": [1],
@@ -74,6 +75,7 @@ const statsByPetType: { [key in Pet]: number[] } = {
   "lion": [1, 2, 4, 7, 11, 15, 17, 24, 33]
 }
 
+// Array of pet level states. Sorted into arrays by depth so our algorithm is fast.
 const statesByDepth: number[][][] = []
 let nextDepth: number[][] = [[1]]
 do {
