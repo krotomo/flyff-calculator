@@ -7,14 +7,12 @@ const formatThousands = (inputValue: number) => numberFormat.format(Math.round(i
 export default function PetResults({ petType, levels, exp, statGoal, levelsGoal, sacPrices, candyPrices }: {
   petType: Pet;
   levels: number[];
-  exp: number;
-  statGoal: number;
-  levelsGoal: number[];
+  exp: number | undefined;
+  statGoal: number | undefined;
+  levelsGoal: number[] | undefined;
   sacPrices: Record<SacTier, number>;
   candyPrices: Record<RaiseTier, number>;
 }) {
-  statGoal = isNaN(statGoal) ? 0 : statGoal
-
   const p: Record<Tier, Partial<Record<Tier, number[]>>> = {
     "f": {
         "f": [1],
@@ -68,7 +66,7 @@ export default function PetResults({ petType, levels, exp, statGoal, levelsGoal,
   const costUp: Record<RaiseTier, number> = {} as Record<RaiseTier, number>
   Object.keys(candyPrices).forEach((tier) => {
     if (tier === tiers[levels.length]) {
-      costUp[tier as RaiseTier] = Math.round( candyPerTier[tier as RaiseTier] * (1-(exp/100)) ) * candyPrices[tier as RaiseTier]
+      costUp[tier as RaiseTier] = Math.round( candyPerTier[tier as RaiseTier] * (1-(( exp ? exp : 0 )/100)) ) * candyPrices[tier as RaiseTier]
     }
     else {
       costUp[tier as RaiseTier] = candyPerTier[tier as RaiseTier] * candyPrices[tier as RaiseTier]
@@ -124,27 +122,29 @@ export default function PetResults({ petType, levels, exp, statGoal, levelsGoal,
   }
   
   function isGoodEnd(state: number[]): boolean {
-    if (levelsGoal.length > state.length) {
-      return false
-    }
-    for (const [index, level] of levelsGoal.entries()) {
-      if (state[index] < level) {
+    if (levelsGoal) {
+      if (levelsGoal.length > state.length) {
         return false
       }
+      for (const [index, level] of levelsGoal.entries()) {
+        if (state[index] < level) {
+          return false
+        }
+      }
     }
-    return statsTotal(state) >= statGoal
+    return statsTotal(state) >= statGoal!
   }
   
   function isBadEnd(state: number[]): boolean {
     for (const [index, level] of state.entries()) {
-      if (index < state.length-1 && level < levelsGoal[index]) {
+      if (index < state.length-1 && levelsGoal && level < levelsGoal[index]) {
         return true
       }
     }
     return (
       tiers[state.length] == "s" &&
       state.slice(-1)[0] == 9 &&
-      statsTotal(state) < statGoal
+      statsTotal(state) < statGoal!
     )
   }
   
