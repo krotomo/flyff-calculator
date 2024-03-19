@@ -1,8 +1,99 @@
-import statesByDepth from "../data/states-by-depth.json"
-
 const numberFormat = new Intl.NumberFormat("en-us")
 
 const formatThousands = (inputValue: number) => numberFormat.format(Math.round(inputValue))
+
+const p: Record<Tier, Partial<Record<Tier, number[]>>> = {
+  "f": {
+      "f": [1],
+  },
+  "e": {
+      "e": [0.7, 0.3],
+      "d": [0.6, 0.4],
+      "c": [0.5, 0.5],
+      "b": [0.4, 0.6],
+      "a": [0.3, 0.7],
+      "s": [0.2, 0.8],
+  },
+  "d": {
+      "d": [0.57, 0.25, 0.18],
+      "c": [0.35, 0.47, 0.18],
+      "b": [0.25, 0.50, 0.25],
+      "a": [0.23, 0.45, 0.32],
+      "s": [0.20, 0.35, 0.45],
+  },
+  "c": {
+      "c": [0.45, 0.31, 0.18, 0.06],
+      "b": [0.31, 0.45, 0.18, 0.06],
+      "a": [0.18, 0.28, 0.45, 0.09],
+      "s": [0.15, 0.27, 0.43, 0.15],
+  },
+  "b": {
+      "b": [0.40, 0.28, 0.18, 0.10, 0.04],
+      "a": [0.28, 0.35, 0.18, 0.13, 0.06],
+      "s": [0.18, 0.25, 0.33, 0.15, 0.09],
+  },
+  "a": {
+      "a": [0.35, 0.23, 0.17, 0.12, 0.07, 0.04, 0.02],
+      "s": [0.11, 0.15, 0.26, 0.25, 0.14, 0.06, 0.03],
+  },
+  "s": {
+      "s": [0.27, 0.21, 0.17, 0.13, 0.09, 0.06, 0.04, 0.02, 0.01],
+  }
+}
+
+const tiers: Tier[] = ["f", "f", "e", "d", "c", "b", "a", "s"]
+
+const candyPerTier: Record<RaiseTier, number> = {
+  "f": 20,
+  "e": 20,
+  "d": 25,
+  "c": 25,
+  "b": 25,
+  "a": 50,
+}
+
+const levelsPerTier: { [key in Tier]: number } = {
+  "f": 1,
+  "e": 2,
+  "d": 3,
+  "c": 4,
+  "b": 5,
+  "a": 7,
+  "s": 9,
+}
+
+const statsByPetType: { [key in Pet]: number[] } = {
+  "unicorn": [96, 191, 383, 670, 1053, 1356, 1628, 2539, 3161],
+  "dragon": [7, 13, 27, 47, 73, 95, 113, 165, 220],
+  "angel": [1, 2, 3, 4, 5, 6, 7, 8, 9],
+  "griffin": [6, 12, 24, 42, 66, 88, 102, 140, 198],
+  "fox": [1, 2, 4, 7, 11, 15, 17, 24, 33],
+  "rabbit": [1, 2, 4, 7, 11, 15, 17, 24, 33],
+  "tiger": [1, 2, 4, 7, 11, 15, 17, 24, 33],
+  "crab": [2, 3, 4, 5, 6, 7, 9, 11, 16],
+  "lion": [1, 2, 4, 7, 11, 15, 17, 24, 33]
+}
+
+const statesByDepth: number[][][] = []
+let nextDepth: number[][] = [[1]]
+do {
+  statesByDepth.push([...nextDepth])
+  const thisDepth = nextDepth
+  nextDepth = []
+  for (const state of thisDepth) {
+    const tier = tiers[state.length]
+    if (state.slice(-1)[0] !== levelsPerTier[tier]) {
+      const newState = [...state]
+      newState[newState.length-1] = state.slice(-1)[0] + 1
+      nextDepth.push(newState)
+    }
+    if (tier !== "s") {
+      const newState = [...state]
+      newState.push(1)
+      nextDepth.push(newState)
+    }
+  }
+} while (nextDepth.length > 0)
 
 export default function PetResults({ petType, levels, exp, statGoal, levelsGoal, sacPrices, candyPrices }: {
   petType: Pet;
@@ -13,56 +104,6 @@ export default function PetResults({ petType, levels, exp, statGoal, levelsGoal,
   sacPrices: Record<SacTier, number>;
   candyPrices: Record<RaiseTier, number>;
 }) {
-  const p: Record<Tier, Partial<Record<Tier, number[]>>> = {
-    "f": {
-        "f": [1],
-    },
-    "e": {
-        "e": [0.7, 0.3],
-        "d": [0.6, 0.4],
-        "c": [0.5, 0.5],
-        "b": [0.4, 0.6],
-        "a": [0.3, 0.7],
-        "s": [0.2, 0.8],
-    },
-    "d": {
-        "d": [0.57, 0.25, 0.18],
-        "c": [0.35, 0.47, 0.18],
-        "b": [0.25, 0.50, 0.25],
-        "a": [0.23, 0.45, 0.32],
-        "s": [0.20, 0.35, 0.45],
-    },
-    "c": {
-        "c": [0.45, 0.31, 0.18, 0.06],
-        "b": [0.31, 0.45, 0.18, 0.06],
-        "a": [0.18, 0.28, 0.45, 0.09],
-        "s": [0.15, 0.27, 0.43, 0.15],
-    },
-    "b": {
-        "b": [0.40, 0.28, 0.18, 0.10, 0.04],
-        "a": [0.28, 0.35, 0.18, 0.13, 0.06],
-        "s": [0.18, 0.25, 0.33, 0.15, 0.09],
-    },
-    "a": {
-        "a": [0.35, 0.23, 0.17, 0.12, 0.07, 0.04, 0.02],
-        "s": [0.11, 0.15, 0.26, 0.25, 0.14, 0.06, 0.03],
-    },
-    "s": {
-        "s": [0.27, 0.21, 0.17, 0.13, 0.09, 0.06, 0.04, 0.02, 0.01],
-    }
-  }
-
-  const tiers: Tier[] = ["f", "f", "e", "d", "c", "b", "a", "s"]
-
-  const candyPerTier: Record<RaiseTier, number> = {
-    "f": 20,
-    "e": 20,
-    "d": 25,
-    "c": 25,
-    "b": 25,
-    "a": 50,
-  }
-  
   const costUp: Record<RaiseTier, number> = {} as Record<RaiseTier, number>
   Object.keys(candyPrices).forEach((tier) => {
     if (tier === tiers[levels.length]) {
@@ -75,28 +116,6 @@ export default function PetResults({ petType, levels, exp, statGoal, levelsGoal,
   })
 
   const costSac = sacPrices
-  
-  const levelsPerTier: { [key in Tier]: number } = {
-    "f": 1,
-    "e": 2,
-    "d": 3,
-    "c": 4,
-    "b": 5,
-    "a": 7,
-    "s": 9,
-  }
-  
-  const statsByPetType: { [key in Pet]: number[] } = {
-    "unicorn": [96, 191, 383, 670, 1053, 1356, 1628, 2539, 3161],
-    "dragon": [7, 13, 27, 47, 73, 95, 113, 165, 220],
-    "angel": [1, 2, 3, 4, 5, 6, 7, 8, 9],
-    "griffin": [6, 12, 24, 42, 66, 88, 102, 140, 198],
-    "fox": [1, 2, 4, 7, 11, 15, 17, 24, 33],
-    "rabbit": [1, 2, 4, 7, 11, 15, 17, 24, 33],
-    "tiger": [1, 2, 4, 7, 11, 15, 17, 24, 33],
-    "crab": [2, 3, 4, 5, 6, 7, 9, 11, 16],
-    "lion": [1, 2, 4, 7, 11, 15, 17, 24, 33]
-  }
   
   function actions(state: number[]): string[] {
     const tier = tiers[state.length]
