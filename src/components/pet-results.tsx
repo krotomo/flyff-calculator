@@ -1,3 +1,12 @@
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+
 // Number formatting
 const numberFormat = new Intl.NumberFormat("en-us")
 const formatThousands = (inputValue: number) => numberFormat.format(Math.round(inputValue))
@@ -57,7 +66,7 @@ const candyPerTier: Record<RaiseTier, number> = {
   "a": 50,
 }
 
-const levelsPerTier: { [key in Tier]: number } = {
+const levelsPerTier: Record<Tier, number> = {
   "egg": 1,
   "f": 1,
   "e": 2,
@@ -68,7 +77,7 @@ const levelsPerTier: { [key in Tier]: number } = {
   "s": 9,
 }
 
-const statsByPetType: { [key in Pet]: number[] } = {
+const statsByPetType: Record<Pet, number[]> = {
   "unicorn": [96, 191, 383, 670, 1053, 1356, 1628, 2539, 3161],
   "dragon": [7, 13, 27, 47, 73, 95, 113, 165, 220],
   "angel": [1, 2, 3, 4, 5, 6, 7, 8, 9],
@@ -111,6 +120,8 @@ export default function PetResults({ petType, levels, exp, statGoal, levelsGoal,
   sacPrices: Record<SacTier, number>;
   candyPrices: Record<RaiseTier, number>;
 }) {
+  // CALCULATOR LOGIC BELOW
+  // Cost of raising by tier
   const costUp: Record<RaiseTier, number> = {} as Record<RaiseTier, number>
   Object.keys(candyPrices).forEach((tier) => {
     if (tier === tiers[levels.length]) {
@@ -122,8 +133,10 @@ export default function PetResults({ petType, levels, exp, statGoal, levelsGoal,
 
   })
 
+  // Cost of sac pet by tier
   const costSac = sacPrices
   
+  // Possible actions in a given state. Sac pets are "e" through "s", raising is "up"
   function actions(state: number[]): string[] {
     const tier = tiers[state.length]
     const result: string[] = []
@@ -140,6 +153,7 @@ export default function PetResults({ petType, levels, exp, statGoal, levelsGoal,
     return result
   }
   
+  // Total stats of a state
   function statsTotal(state: number[]): number {
     let sum = 0
     for (const level of state) {
@@ -148,6 +162,7 @@ export default function PetResults({ petType, levels, exp, statGoal, levelsGoal,
     return sum
   }
   
+  // Does the state reach the level and stat goal?
   function isGoodEnd(state: number[]): boolean {
     if (levelsGoal) {
       if (levelsGoal.length > state.length) {
@@ -163,6 +178,7 @@ export default function PetResults({ petType, levels, exp, statGoal, levelsGoal,
     else return statsTotal(state) >= statGoal!
   }
   
+  // Is it impossible to reach the level and stat goal from this state?
   function isBadEnd(state: number[]): boolean {
     for (const [index, level] of state.entries()) {
       if (index < state.length-1 && levelsGoal && level < levelsGoal[index]) {
@@ -176,6 +192,7 @@ export default function PetResults({ petType, levels, exp, statGoal, levelsGoal,
     )
   }
   
+  // Data structure that stores counts of each type of action
   class ActionCount { 
     sac: Record<SacTier, number> = {
       "e": 0,
@@ -195,6 +212,7 @@ export default function PetResults({ petType, levels, exp, statGoal, levelsGoal,
       "a": 0,
     }
   
+    // Add another action count, multiplied by a scaling factor, to this action count
     addFactor(other: ActionCount, factor: number) {
       for (const tier in other.sac) {
         this.sac[tier as SacTier] += other.sac[tier as SacTier] * factor
@@ -205,6 +223,7 @@ export default function PetResults({ petType, levels, exp, statGoal, levelsGoal,
     }
   }
   
+  // Flyweight action counts for good and bad ends
   const goodEndActionCount = new ActionCount()
   const badEndActionCount = new ActionCount()
   for (const tier in badEndActionCount.sac) {
@@ -214,6 +233,7 @@ export default function PetResults({ petType, levels, exp, statGoal, levelsGoal,
     badEndActionCount.up[tier as RaiseTier] = Infinity
   }
 
+  // Calculates expected candy cost from action count
   function candyCostFromActionCount(actionCount: ActionCount) {
     let cost = 0
     for (const tier in actionCount.up) {
@@ -222,6 +242,7 @@ export default function PetResults({ petType, levels, exp, statGoal, levelsGoal,
     return cost
   }
 
+  // Calculates expected sac pet cost from action count
   function sacCostFromActionCount(actionCount: ActionCount) {
     let cost = 0
     for (const tier in actionCount.sac) {
@@ -230,6 +251,7 @@ export default function PetResults({ petType, levels, exp, statGoal, levelsGoal,
     return cost
   }
 
+  // Calculates total expected cost from action count
   function costFromActionCount(actionCount: ActionCount) {
     let cost = 0
     cost += candyCostFromActionCount(actionCount)
@@ -237,6 +259,7 @@ export default function PetResults({ petType, levels, exp, statGoal, levelsGoal,
     return cost
   }
   
+  // All the cost calculation
   function calculatePetCost() {
     const stateActionCounts: {
       [key: string]: {
@@ -316,38 +339,53 @@ export default function PetResults({ petType, levels, exp, statGoal, levelsGoal,
   }
 
   const results = calculatePetCost()
-  const result = results[JSON.stringify(levels)]
+
+  // UI LOGIC HERE
+  const currentState = JSON.stringify(levels)
+  
+  function actionString(action: string, state: number[]): string {
+    if (action === "up") {
+      return `Raise to ${tiers[state.length+1].toUpperCase()}`
+    }
+    else {
+      return `Sacrifice ${action.toUpperCase()} Pet`
+    }
+  }
+
 
   return (
     <div className="basis-1/2">
+      <Card className="m-2">
+        <CardHeader>
+          <CardTitle>Best Action: { actionString(results[currentState][0].action, levels) }</CardTitle>
+          <CardTitle>Total Cost: { formatThousands(costFromActionCount(results[currentState][0].actionCount)) }</CardTitle>
+        </CardHeader>
+      </Card>
+      <Card className="m-2">
+        <CardHeader>
+          <CardTitle>Sac Pet Cost: { formatThousands(sacCostFromActionCount(results[currentState][0].actionCount)) }</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {
+            Object.keys(results[currentState][0].actionCount.sac).map((tier) => {
+              return(
+                results[currentState][0].actionCount.sac[tier as SacTier] > 0 && 
+                <div key={"sac" + tier}>
+                  {tier}: { formatThousands(results[currentState][0].actionCount.sac[tier as SacTier] * costSac[tier as SacTier]) }
+                </div>
+              )
+            })
+          }
+        </CardContent>
+      </Card>
       <div>
-        <h2>
-          Total Cost: { formatThousands(costFromActionCount(result[0].actionCount)) }
-        </h2>
-      </div>
-      <div>
-        <h3>
-          Sac Pet Cost: { formatThousands(sacCostFromActionCount(result[0].actionCount)) }
-        </h3>
+        <h3>Pet Candy Cost: { formatThousands(candyCostFromActionCount(results[currentState][0].actionCount)) }</h3>
         {
-          Object.keys(result[0].actionCount.sac).map((tier) => {
+          Object.keys(results[currentState][0].actionCount.up).map((tier) => {
             return(
-              result[0].actionCount.sac[tier as SacTier] > 0 && 
+              results[currentState][0].actionCount.up[tier as RaiseTier] > 0 && 
               <div>
-                {tier}: { formatThousands(result[0].actionCount.sac[tier as SacTier] * costSac[tier as SacTier]) }
-              </div>
-            )
-          })
-        }
-      </div>
-      <div>
-        <h3>Pet Candy Cost: { formatThousands(candyCostFromActionCount(result[0].actionCount)) }</h3>
-        {
-          Object.keys(result[0].actionCount.up).map((tier) => {
-            return(
-              result[0].actionCount.up[tier as RaiseTier] > 0 && 
-              <div>
-                {tier}: { formatThousands(result[0].actionCount.up[tier as RaiseTier] * costUp[tier as RaiseTier]) }
+                {tier}: { formatThousands(results[currentState][0].actionCount.up[tier as RaiseTier] * costUp[tier as RaiseTier]) }
               </div>
             )
           })
