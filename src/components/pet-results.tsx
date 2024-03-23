@@ -6,6 +6,16 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import {
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableFooter,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
 
 // Number formatting
 const numberFormat = new Intl.NumberFormat("en-us")
@@ -341,8 +351,10 @@ export default function PetResults({ petType, levels, exp, statGoal, levelsGoal,
   const results = calculatePetCost()
 
   // UI LOGIC HERE
+  // State string
   const currentState = JSON.stringify(levels)
   
+  // Get UI string for action
   function actionString(action: string, state: number[]): string {
     if (action === "up") {
       return `Raise to ${tiers[state.length+1].toUpperCase()}`
@@ -352,14 +364,32 @@ export default function PetResults({ petType, levels, exp, statGoal, levelsGoal,
     }
   }
 
+  // Generate table entries for actions table
+  const actionsTableEntries: Record<"action" | "cost", string>[] = []
+  results[currentState].forEach(({action, actionCount}) => {
+    const tableEntry = {
+      action: action,
+      cost: formatThousands(costFromActionCount(actionCount)),
+    }
+    actionsTableEntries.push(tableEntry)
+  })
 
   return (
     <div className="basis-1/2">
       <Card className="m-2">
         <CardHeader>
-          <CardTitle>Best Action: { actionString(results[currentState][0].action, levels) }</CardTitle>
-          <CardTitle>Total Cost: { formatThousands(costFromActionCount(results[currentState][0].actionCount)) }</CardTitle>
+          <CardTitle>Actions</CardTitle>
+          <div>Best Action: { actionString(results[currentState][0].action, levels) }</div>
+          <div>Total Cost: { formatThousands(costFromActionCount(results[currentState][0].actionCount)) }</div>
         </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+              </TableRow>
+            </TableHeader>
+          </Table>
+        </CardContent>
       </Card>
       <Card className="m-2">
         <CardHeader>
