@@ -43,18 +43,20 @@ export default function PetCalculator() {
           ></PetInput>
         </div>
         {showResults &&
-          <PetResults
-            petType={petType}
-            levels={levels}
-            exp={exp}
-            statGoal={statGoal}
-            levelsGoal={levelsGoal}
-            sacPrices={sacPrices}
-            candyPrices={candyPrices}
-          ></PetResults>
+          <div className="basis-1/3">
+            <PetResults
+              petType={petType}
+              levels={levels}
+              exp={exp}
+              statGoal={statGoal}
+              levelsGoal={levelsGoal}
+              sacPrices={sacPrices}
+              candyPrices={candyPrices}
+            ></PetResults>
+          </div>
         }
         {!showResults &&
-          <div className="basis-2/3 max-w-md" />
+          <div className="basis-1/3 max-w-md" />
         }
       </div>
     </div>

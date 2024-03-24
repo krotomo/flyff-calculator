@@ -16,6 +16,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion"
 
 // Number formatting
 const numberFormat = new Intl.NumberFormat("en-us")
@@ -367,27 +373,40 @@ export default function PetResults({ petType, levels, exp, statGoal, levelsGoal,
   // Generate table entries for actions table
   const actionsTableEntries: Record<"action" | "cost", string>[] = []
   results[currentState].forEach(({action, actionCount}) => {
+    const costNumber = costFromActionCount(actionCount)
     const tableEntry = {
-      action: action,
-      cost: formatThousands(costFromActionCount(actionCount)),
+      action: actionString(action, levels),
+      cost: isNaN(costNumber) ? "Goal Unattainable" : formatThousands(costNumber),
     }
     actionsTableEntries.push(tableEntry)
   })
 
   return (
-    <div className="basis-1/2">
+    <div>
       <Card className="m-2">
         <CardHeader>
-          <CardTitle>Actions</CardTitle>
-          <div>Best Action: { actionString(results[currentState][0].action, levels) }</div>
-          <div>Total Cost: { formatThousands(costFromActionCount(results[currentState][0].actionCount)) }</div>
+          <CardTitle>Results</CardTitle>
         </CardHeader>
         <CardContent>
+          <div className="mb-4">    
+            <div>Average Cost: { formatThousands(costFromActionCount(results[currentState][0].actionCount)) }</div>
+            <div>Best Action: { actionString(results[currentState][0].action, levels) }</div>
+          </div>
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead>Action</TableHead>
+                <TableHead className="text-right">Average Cost</TableHead>
               </TableRow>
             </TableHeader>
+            <TableBody>
+              {actionsTableEntries.map((tableEntry) => (
+                <TableRow key={tableEntry.action}>
+                  <TableCell className="text-left">{tableEntry.action}</TableCell>
+                  <TableCell className="text-right">{tableEntry.cost}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
           </Table>
         </CardContent>
       </Card>
