@@ -136,6 +136,23 @@ export default function PetResults({ petType, levels, exp, statGoal, levelsGoal,
   sacPrices: Record<SacTier, number>;
   candyPrices: Record<RaiseTier, number>;
 }) {
+  // If form hasn't been filled...
+  if (!petType) return (
+    <div>
+      <Card className="m-2">
+        <CardHeader>
+          <CardTitle>Results</CardTitle>
+        </CardHeader>
+        <CardContent></CardContent>
+      </Card>
+      <Card className="m-2">
+        <CardHeader>
+          <CardTitle>Details</CardTitle>
+        </CardHeader>
+        <CardContent></CardContent>
+      </Card>
+    </div>
+  )
   // CALCULATOR LOGIC BELOW
   // Cost of raising by tier
   const costUp: Record<RaiseTier, number> = {} as Record<RaiseTier, number>
@@ -146,7 +163,6 @@ export default function PetResults({ petType, levels, exp, statGoal, levelsGoal,
     else {
       costUp[tier as RaiseTier] = candyPerTier[tier as RaiseTier] * candyPrices[tier as RaiseTier]
     }
-
   })
 
   // Cost of sac pet by tier
