@@ -153,6 +153,7 @@ export default function PetResults({ petType, levels, exp, statGoal, levelsGoal,
       </Card>
     </div>
   )
+
   // CALCULATOR LOGIC BELOW
   // Cost of raising by tier
   const costUp: Record<RaiseTier, number> = {} as Record<RaiseTier, number>
@@ -333,13 +334,13 @@ export default function PetResults({ petType, levels, exp, statGoal, levelsGoal,
       for (const state of statesByDepth[depth]) {
         if (isGoodEnd(state)) {
           stateActionCounts[JSON.stringify(state)] = [{
-            action: "none",
+            action: "good",
             actionCount: goodEndActionCount
           }]
         }
         else if (isBadEnd(state)) {
           stateActionCounts[JSON.stringify(state)] = [{
-            action: "none",
+            action: "bad",
             actionCount: badEndActionCount
           }]
         }
@@ -375,6 +376,7 @@ export default function PetResults({ petType, levels, exp, statGoal, levelsGoal,
   // UI LOGIC HERE
   // State string
   const currentState = JSON.stringify(levels)
+  const currentResult = results[currentState]
   
   // Get UI string for action
   function actionString(action: string, state: number[]): string {
@@ -392,7 +394,7 @@ export default function PetResults({ petType, levels, exp, statGoal, levelsGoal,
     const costNumber = costFromActionCount(actionCount)
     const tableEntry = {
       action: actionString(action, levels),
-      cost: isNaN(costNumber) ? "Goal Unattainable" : formatThousands(costNumber),
+      cost: isFinite(costNumber) ? formatThousands(costNumber) : "Goal Impossible",
     }
     actionsTableEntries.push(tableEntry)
   })
@@ -404,9 +406,12 @@ export default function PetResults({ petType, levels, exp, statGoal, levelsGoal,
           <CardTitle>Results</CardTitle>
         </CardHeader>
         <CardContent>
+          {
+            
+          }
           <div className="mb-4">    
-            <div>Average Cost: { formatThousands(costFromActionCount(results[currentState][0].actionCount)) }</div>
-            <div>Best Action: { actionString(results[currentState][0].action, levels) }</div>
+            <div>Average Cost: { formatThousands(costFromActionCount(currentResult[0].actionCount)) }</div>
+            <div>Best Action: { actionString(currentResult[0].action, levels) }</div>
           </div>
           <Table>
             <TableHeader>
@@ -428,15 +433,15 @@ export default function PetResults({ petType, levels, exp, statGoal, levelsGoal,
       </Card>
       <Card className="m-2">
         <CardHeader>
-          <CardTitle>Sac Pet Cost: { formatThousands(sacCostFromActionCount(results[currentState][0].actionCount)) }</CardTitle>
+          <CardTitle>Sac Pet Cost: { formatThousands(sacCostFromActionCount(currentResult[0].actionCount)) }</CardTitle>
         </CardHeader>
         <CardContent>
           {
-            Object.keys(results[currentState][0].actionCount.sac).map((tier) => {
+            Object.keys(currentResult[0].actionCount.sac).map((tier) => {
               return(
-                results[currentState][0].actionCount.sac[tier as SacTier] > 0 && 
+                currentResult[0].actionCount.sac[tier as SacTier] > 0 && 
                 <div key={"sac" + tier}>
-                  {tier}: { formatThousands(results[currentState][0].actionCount.sac[tier as SacTier] * costSac[tier as SacTier]) }
+                  {tier}: { formatThousands(currentResult[0].actionCount.sac[tier as SacTier] * costSac[tier as SacTier]) }
                 </div>
               )
             })
