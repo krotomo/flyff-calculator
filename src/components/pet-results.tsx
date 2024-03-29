@@ -16,12 +16,14 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { Label } from "@/components/ui/label"
 import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion"
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 
 // Number formatting
 const numberFormat = new Intl.NumberFormat("en-us")
@@ -441,14 +443,14 @@ export default function PetResults({ petType, levels, exp, statGoal, levelsGoal,
         <CardContent>
           <div>
             <div className="mb-4">    
-              <div>Average Cost: { formatThousands(costFromActionCount(currentResult[0].actionCount, costUp, costSac)) }</div>
+              <div>Average Total Cost: { formatThousands(costFromActionCount(currentResult[0].actionCount, costUp, costSac)) }</div>
               <div>Best Action: { actionString(currentResult[0].action, levels) }</div>
             </div>
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Action</TableHead>
-                  <TableHead className="text-right">Average Cost</TableHead>
+                  <TableHead className="text-right">Average Total Cost</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -468,29 +470,48 @@ export default function PetResults({ petType, levels, exp, statGoal, levelsGoal,
           <CardTitle>Details</CardTitle>
         </CardHeader>
         <CardContent>
-          <div>
-            <h3>Sac Pet Cost: { formatThousands(sacCostFromActionCount(currentResult[0].actionCount, costSac)) }</h3>
-            {
-              Object.keys(currentResult[0].actionCount.sac).map((tier) => {
-                return(
-                  currentResult[0].actionCount.sac[tier as SacTier] > 0 && 
-                  <div key={"sac" + tier}>
-                    {tier}: { formatThousands(currentResult[0].actionCount.sac[tier as SacTier] * costSac[tier as SacTier]) }
-                  </div>
-                )
-              })
-            }
-            <h3>Pet Candy Cost: { formatThousands(candyCostFromActionCount(currentResult[0].actionCount, costUp)) }</h3>
-            {
-              Object.keys(currentResult[0].actionCount.up).map((tier) => {
-                return(
-                  currentResult[0].actionCount.up[tier as RaiseTier] > 0 && 
-                  <div>
-                    {tier}: { formatThousands(currentResult[0].actionCount.up[tier as RaiseTier] * costUp[tier as RaiseTier]) }
-                  </div>
-                )
-              })
-            }
+          <Label>Action</Label>
+          <Select>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {
+                results[currentState].map(({ action }) => {
+                  return(
+                    <SelectItem value="action">{ actionString(action, levels) }</SelectItem>
+                  )
+                })
+              }
+            </SelectContent>
+          </Select>
+          <div className="flex flex-row m-2">
+            <div>
+              <h3>Sac Pet Cost: { formatThousands(sacCostFromActionCount(currentResult[0].actionCount, costSac)) }</h3>
+              {
+                Object.keys(currentResult[0].actionCount.sac).map((tier) => {
+                  return(
+                    currentResult[0].actionCount.sac[tier as SacTier] > 0 && 
+                    <div key={"sac" + tier}>
+                      {tier}: { formatThousands(currentResult[0].actionCount.sac[tier as SacTier] * costSac[tier as SacTier]) }
+                    </div>
+                  )
+                })
+              }
+            </div>
+            <div>
+              <h3>Pet Candy Cost: { formatThousands(candyCostFromActionCount(currentResult[0].actionCount, costUp)) }</h3>
+              {
+                Object.keys(currentResult[0].actionCount.up).map((tier) => {
+                  return(
+                    currentResult[0].actionCount.up[tier as RaiseTier] > 0 && 
+                    <div>
+                      {tier}: { formatThousands(currentResult[0].actionCount.up[tier as RaiseTier] * costUp[tier as RaiseTier]) }
+                    </div>
+                  )
+                })
+              }
+            </div>
           </div>
         </CardContent>
       </Card>
