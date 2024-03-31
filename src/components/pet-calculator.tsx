@@ -35,14 +35,16 @@ export default function PetCalculator() {
 
   return(
     <div>
-      <h1>Pet Cost Calculator</h1>
+      <h1 className="text-4xl font-bold mb-4">Pet Cost Calculator</h1>
       <div className="flex justify-center">
         <div className="basis-1/3 max-w-md">
+          <h2 className="text-3xl my-4 font-semibold">Pet Info</h2>
           <PetInput
             setPetState={setPetState}
           ></PetInput>
         </div>
         <div className="basis-1/3 max-w-md">
+          <h2 className="text-3xl font-semibold my-4">Results</h2>
           <PetResults
             petType={petType}
             levels={levels}

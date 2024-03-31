@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react"
 import {
   Card,
   CardContent,
@@ -354,75 +355,28 @@ function actionString(action: string, state: number[]): string {
   }
 }
 
-export default function PetResults({ petType, levels, exp, statGoal, levelsGoal, sacPrices, candyPrices }: {
-  petType: Pet;
-  levels: number[];
-  exp: number;
-  statGoal: number;
-  levelsGoal: number[];
-  sacPrices: Record<SacTier, number>;
-  candyPrices: Record<RaiseTier, number>;
+function ActionResults({ results, levels, costUp, costSac }: {
+  results: Results
+  levels: number[]
+  costUp: Record<RaiseTier, number>
+  costSac: Record<SacTier, number>
 }) {
-  if (!petType) {
-    return (
-      <div>
-        <Card className="m-2">
-          <CardHeader>
-            <CardTitle>Summary</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="mt-8 mb-12">
-              <i className="text-gray-500">Please complete Pet Info to see results.</i>
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="m-2">
-          <CardHeader>
-            <CardTitle>Details</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="mt-8 mb-12">
-              <i className="text-gray-500">Please complete Pet Info to see results.</i>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    )
-  }
-
-  // Calculate raise cost from candy cost and exp
-  const costUp: Record<RaiseTier, number> = {} as Record<RaiseTier, number>
-  Object.keys(candyPrices).forEach((tier) => {
-    if (tier === tiers[levels.length]) {
-      costUp[tier as RaiseTier] = Math.round( candyPerTier[tier as RaiseTier] * (1-(( exp ? exp : 0 )/100)) ) * candyPrices[tier as RaiseTier]
-    }
-    else {
-      costUp[tier as RaiseTier] = candyPerTier[tier as RaiseTier] * candyPrices[tier as RaiseTier]
-    }
-  })
-
-  // Cost of sac pet by tier
-  const costSac = sacPrices
-
-  // Calculate results
-  const results = calculatePetCost(petType, levelsGoal, statGoal, costUp, costSac)
-
-  // State string
+  // currentState and currentResult
   const currentState = JSON.stringify(levels)
   const currentResult = results[currentState]
 
-  // Are we at an "end" state?
-  if (currentResult[0].action === "good") {
-    return(
-      <div></div>
-    )
-  }
-  if (currentResult[0].action === "bad") {
-    return(
-      <div></div>
-    )
-  }
-  
+  // Selected action
+  const [selectedAction, setSelectedAction] = useState<string>(currentResult[0].action)
+
+  // Update selected action when results change
+  useEffect(() => {
+    setSelectedAction(currentResult[0].action)
+  }, [currentResult])
+
+  // Summary info
+  const averageCost = formatThousands(costFromActionCount(currentResult[0].actionCount, costUp, costSac))
+  const bestAction = actionString(currentResult[0].action, levels)
+
   // Generate table entries for actions table
   const actionsTableEntries: Record<"action" | "cost", string>[] = []
   results[currentState].forEach(({action, actionCount}) => {
@@ -443,14 +397,14 @@ export default function PetResults({ petType, levels, exp, statGoal, levelsGoal,
         <CardContent>
           <div>
             <div className="mb-4">    
-              <div>Average Total Cost: { formatThousands(costFromActionCount(currentResult[0].actionCount, costUp, costSac)) }</div>
-              <div>Best Action: { actionString(currentResult[0].action, levels) }</div>
+              <div>Average Cost: { averageCost }</div>
+              <div>Best Action: { bestAction }</div>
             </div>
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Action</TableHead>
-                  <TableHead className="text-right">Average Total Cost</TableHead>
+                  <TableHead className="text-right">Average Cost</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -471,15 +425,15 @@ export default function PetResults({ petType, levels, exp, statGoal, levelsGoal,
         </CardHeader>
         <CardContent>
           <Label>Action</Label>
-          <Select>
+          <Select value={selectedAction} onValueChange={(e) => setSelectedAction(e)}>
             <SelectTrigger>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
               {
-                results[currentState].map(({ action }) => {
+                results[currentState].map(({ action }, index) => {
                   return(
-                    <SelectItem value="action">{ actionString(action, levels) }</SelectItem>
+                    <SelectItem value={action}>{ index === 0 ? actionString(action, levels) + " (Best)" : actionString(action, levels) }</SelectItem>
                   )
                 })
               }
@@ -516,5 +470,64 @@ export default function PetResults({ petType, levels, exp, statGoal, levelsGoal,
         </CardContent>
       </Card>
     </div>
+  )
+}
+
+export default function PetResults({ petType, levels, exp, statGoal, levelsGoal, sacPrices, candyPrices }: {
+  petType: Pet
+  levels: number[]
+  exp: number
+  statGoal: number
+  levelsGoal: number[]
+  sacPrices: Record<SacTier, number>
+  candyPrices: Record<RaiseTier, number>
+}) {
+  if (!petType) {
+    return (
+      <div className="my-20">
+        <i className="text-gray-500">Please complete Pet Info to see results.</i>
+      </div>
+    )
+  }
+
+  // Calculate raise cost from candy cost and exp
+  const costUp: Record<RaiseTier, number> = {} as Record<RaiseTier, number>
+  Object.keys(candyPrices).forEach((tier) => {
+    if (tier === tiers[levels.length]) {
+      costUp[tier as RaiseTier] = Math.round( candyPerTier[tier as RaiseTier] * (1-(( exp ? exp : 0 )/100)) ) * candyPrices[tier as RaiseTier]
+    }
+    else {
+      costUp[tier as RaiseTier] = candyPerTier[tier as RaiseTier] * candyPrices[tier as RaiseTier]
+    }
+  })
+
+  // Cost of sac pet by tier
+  const costSac = sacPrices
+
+  // Calculate results
+  const results = calculatePetCost(petType, levelsGoal, statGoal, costUp, costSac)
+
+  // State string
+  const currentState = JSON.stringify(levels)
+  const currentResult = results[currentState]
+
+  // Are we at an "end" state?
+  if (currentResult[0].action === "good") {
+    return(
+      <div></div>
+    )
+  }
+  if (currentResult[0].action === "bad") {
+    return(
+      <div></div>
+    )
+  }
+  return (
+    <ActionResults 
+      results={results}
+      levels={levels}
+      costUp={costUp}
+      costSac={costSac}
+    />
   )
 }
