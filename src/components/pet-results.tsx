@@ -406,7 +406,23 @@ function ActionResults({ results, levels, costUp, costSac }: {
 
   // Details
   const selectedActionCount = currentResult.find((val) => { return val.action === selectedAction })!.actionCount
-  const totalCost = formatThousands(costFromActionCount(currentResult[0].actionCount, costUp, costSac))
+  const totalCost = formatThousands(costFromActionCount(selectedActionCount, costUp, costSac))
+  const candyCost = formatThousands(candyCostFromActionCount(selectedActionCount, costUp))
+
+  // Sac Cost
+  const sacCostTableEntries: Record<"action" | "count" | "cost", string>[] = []
+  const sacCost = formatThousands(sacCostFromActionCount(selectedActionCount, costSac))
+  for (const tier in selectedActionCount.sac) {
+    const count = selectedActionCount.sac[tier as SacTier]
+    if (count > 0) {
+      const tableEntry = {
+        action: tier.toUpperCase(),
+        count: numberFormat.format(Math.round(count * 10) / 10),
+        cost: formatThousands(Math.round(count * costSac[tier as SacTier]))
+      }
+      sacCostTableEntries.push(tableEntry)
+    }
+  }
 
   return (
     <div>
@@ -424,14 +440,14 @@ function ActionResults({ results, levels, costUp, costSac }: {
               <TableHeader>
                 <TableRow>
                   <TableHead>Action</TableHead>
-                  <TableHead className="text-right">Average Cost</TableHead>
+                  <TableHead className="text-right">Total Cost</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {actionsTableEntries.map((tableEntry) => (
-                  <TableRow key={tableEntry.action}>
-                    <TableCell className="text-left">{tableEntry.action}</TableCell>
-                    <TableCell className="text-right">{tableEntry.cost}</TableCell>
+                {actionsTableEntries.map(({action, cost}) => (
+                  <TableRow key={action}>
+                    <TableCell className="text-left">{action}</TableCell>
+                    <TableCell className="text-right">{cost}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -444,9 +460,9 @@ function ActionResults({ results, levels, costUp, costSac }: {
           <CardTitle>Details</CardTitle>
         </CardHeader>
         <CardContent>
-          <Label>Action</Label>
+          <Label htmlFor="actionSelect">Action</Label>
           <Select value={selectedAction} onValueChange={(e) => setSelectedAction(e)}>
-            <SelectTrigger>
+            <SelectTrigger id="actionSelect">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -463,17 +479,25 @@ function ActionResults({ results, levels, costUp, costSac }: {
             Total Cost: { totalCost }
           </div>
           <div className="m-2">
-            <h3>Sac Pet Cost: { formatThousands(sacCostFromActionCount(currentResult[0].actionCount, costSac)) }</h3>
-            {
-              Object.keys(currentResult[0].actionCount.sac).map((tier) => {
-                return(
-                  currentResult[0].actionCount.sac[tier as SacTier] > 0 && 
-                  <div key={"sac" + tier}>
-                    {tier}: { formatThousands(currentResult[0].actionCount.sac[tier as SacTier] * costSac[tier as SacTier]) }
-                  </div>
-                )
-              })
-            }
+            <h3>Sac Pet Cost: { sacCost }</h3>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Sac Tier</TableHead>
+                  <TableHead className="text-center">Count</TableHead>
+                  <TableHead className="text-right">Cost</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {sacCostTableEntries.map(({action, count, cost}) => (
+                  <TableRow key={"sacCost" + action}>
+                    <TableCell className="text-left">{action}</TableCell>
+                    <TableCell className="text-center">{count}</TableCell>
+                    <TableCell className="text-right">{cost}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           </div>
           <div className="m-2">
             <h3>Pet Candy Cost: { formatThousands(candyCostFromActionCount(currentResult[0].actionCount, costUp)) }</h3>
