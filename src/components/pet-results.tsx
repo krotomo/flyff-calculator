@@ -405,7 +405,8 @@ function ActionResults({ results, levels, costUp, costSac }: {
   })
 
   // Details
-  const selectedActionCount = currentResult.find((val) => { return val.action === selectedAction })!.actionCount
+  const selectedActionCount = currentResult.find((val) => { return val.action === selectedAction })?.actionCount 
+    || currentResult[0].actionCount
   const totalCost = formatThousands(costFromActionCount(selectedActionCount, costUp, costSac))
   const candyCost = formatThousands(candyCostFromActionCount(selectedActionCount, costUp))
 
@@ -484,7 +485,7 @@ function ActionResults({ results, levels, costUp, costSac }: {
               <TableHeader>
                 <TableRow>
                   <TableHead>Sac Tier</TableHead>
-                  <TableHead className="text-center">Count</TableHead>
+                  <TableHead className="text-right">Count</TableHead>
                   <TableHead className="text-right">Cost</TableHead>
                 </TableRow>
               </TableHeader>
@@ -492,7 +493,7 @@ function ActionResults({ results, levels, costUp, costSac }: {
                 {sacCostTableEntries.map(({action, count, cost}) => (
                   <TableRow key={"sacCost" + action}>
                     <TableCell className="text-left">{action}</TableCell>
-                    <TableCell className="text-center">{count}</TableCell>
+                    <TableCell className="text-right">{count}</TableCell>
                     <TableCell className="text-right">{cost}</TableCell>
                   </TableRow>
                 ))}
