@@ -371,9 +371,11 @@ function actionString(action: string, state: number[]): string {
   }
 }
 
-function ActionResults({ results, levels, costUp, costSac }: {
+function ActionResults({ results, levels, exp, candyPrices, costUp, costSac }: {
   results: Results
   levels: number[]
+  exp: number
+  candyPrices: Record<RaiseTier, number>
   costUp: Record<RaiseTier, number>
   costSac: Record<SacTier, number>
 }) {
@@ -408,7 +410,6 @@ function ActionResults({ results, levels, costUp, costSac }: {
   const selectedActionCount = currentResult.find((val) => { return val.action === selectedAction })?.actionCount 
     || currentResult[0].actionCount
   const totalCost = formatThousands(costFromActionCount(selectedActionCount, costUp, costSac))
-  const candyCost = formatThousands(candyCostFromActionCount(selectedActionCount, costUp))
 
   // Sac Cost
   const sacCostTableEntries: Record<"action" | "count" | "cost", string>[] = []
@@ -419,11 +420,40 @@ function ActionResults({ results, levels, costUp, costSac }: {
       const tableEntry = {
         action: tier.toUpperCase(),
         count: numberFormat.format(Math.round(count * 10) / 10),
-        cost: formatThousands(Math.round(count * costSac[tier as SacTier]))
+        cost: formatThousands(count * costSac[tier as SacTier])
       }
       sacCostTableEntries.push(tableEntry)
     }
   }
+  sacCostTableEntries.push({
+    action: "Total",
+    count: "-",
+    cost: sacCost,
+  })
+
+  // Candy Cost
+  const candyCostTableEntries: Record<"action" | "candy" | "count" | "cost", string>[] = []
+  const candyCost = formatThousands(candyCostFromActionCount(selectedActionCount, costUp))
+  const candyCount = candyToRaise(levels, exp)
+  for (const tier in selectedActionCount.up) {
+    const raiseCount = selectedActionCount.up[tier as RaiseTier]
+    if (raiseCount > 0) {
+      const nextTier = tiers[tiers.indexOf(tier as Tier) + 1]
+      const tableEntry = {
+        action: `${tier}\u2192${nextTier}`.toUpperCase(),
+        candy: tier === "egg" ? "F" : tier.toUpperCase(),
+        count: formatThousands(raiseCount * candyCount[tier as RaiseTier]),
+        cost: formatThousands(raiseCount * costUp[tier as RaiseTier])
+      }
+      candyCostTableEntries.push(tableEntry)
+    }
+  }
+  candyCostTableEntries.push({
+    action: "Total",
+    candy: "-",
+    count: "-",
+    cost: candyCost,
+  })
 
   return (
     <div>
@@ -434,7 +464,7 @@ function ActionResults({ results, levels, costUp, costSac }: {
         <CardContent>
           <div>
             <div className="mb-4">    
-              <div>Average Cost: { bestCost }</div>
+              <div>Best Average Cost: { bestCost }</div>
               <div>Best Action: { bestAction }</div>
             </div>
             <Table>
@@ -477,10 +507,7 @@ function ActionResults({ results, levels, costUp, costSac }: {
             </SelectContent>
           </Select>
           <div className="m-2">
-            Total Cost: { totalCost }
-          </div>
-          <div className="m-2">
-            <h3>Sac Pet Cost: { sacCost }</h3>
+            <Label>Sac Pet Cost</Label>
             <Table>
               <TableHeader>
                 <TableRow>
@@ -501,17 +528,30 @@ function ActionResults({ results, levels, costUp, costSac }: {
             </Table>
           </div>
           <div className="m-2">
-            <h3>Pet Candy Cost: { formatThousands(candyCostFromActionCount(currentResult[0].actionCount, costUp)) }</h3>
-            {
-              Object.keys(currentResult[0].actionCount.up).map((tier) => {
-                return(
-                  currentResult[0].actionCount.up[tier as RaiseTier] > 0 && 
-                  <div>
-                    {tier}: { formatThousands(currentResult[0].actionCount.up[tier as RaiseTier] * costUp[tier as RaiseTier]) }
-                  </div>
-                )
-              })
-            }
+            <Label>Pet Candy Cost</Label>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Raise Tier</TableHead>
+                  <TableHead>Candy</TableHead>
+                  <TableHead className="text-right">Count</TableHead>
+                  <TableHead className="text-right">Cost</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {candyCostTableEntries.map(({action, candy, count, cost}) => (
+                  <TableRow key={"candyCost" + action}>
+                    <TableCell className="text-left">{action}</TableCell>
+                    <TableCell className="text-left">{candy}</TableCell>
+                    <TableCell className="text-right">{count}</TableCell>
+                    <TableCell className="text-right">{cost}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+          <div className="m-2">
+            Total Cost: { totalCost }
           </div>
         </CardContent>
       </Card>
@@ -561,6 +601,8 @@ export default function PetResults({ petType, levels, exp, statGoal, levelsGoal,
     <ActionResults 
       results={results}
       levels={levels}
+      exp={exp}
+      candyPrices={candyPrices}
       costUp={costUp}
       costSac={sacPrices}
     />
