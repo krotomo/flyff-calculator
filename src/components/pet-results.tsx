@@ -371,7 +371,7 @@ function actionString(action: string, state: number[]): string {
   }
 }
 
-function ActionResults({ results, levels, exp, candyPrices, costUp, costSac }: {
+function ActionResults({ results, levels, exp, costUp, costSac }: {
   results: Results
   levels: number[]
   exp: number
@@ -406,7 +406,7 @@ function ActionResults({ results, levels, exp, candyPrices, costUp, costSac }: {
     actionsTableEntries.push(tableEntry)
   })
 
-  // Details
+  // Cost details
   const selectedActionCount = currentResult.find((val) => { return val.action === selectedAction })?.actionCount 
     || currentResult[0].actionCount
   const totalCost = formatThousands(costFromActionCount(selectedActionCount, costUp, costSac))
@@ -455,6 +455,37 @@ function ActionResults({ results, levels, exp, candyPrices, costUp, costSac }: {
     cost: candyCost,
   })
 
+  // Probabilities
+  const succProb = [] as { "succ": number[], "prob": number }[]
+  if (selectedAction === "up") {
+    const upTier = tiers[levels.length + 1]
+    for (const [index, pSucc] of p[upTier]![upTier]!.entries()) {
+      const succState = [...levels]
+      succState.push(index + 1)
+      succProb.push({
+        succ: succState,
+        prob: pSucc,
+      })
+    }
+  }
+  else {
+    const tier = tiers[levels.length]
+    let pSelf = 0
+    p[tier][selectedAction as SacTier]?.slice(0, levels.slice(-1)[0]).forEach((pSelfPart) => pSelf += pSelfPart)
+    p[tier][selectedAction as SacTier]?.slice(levels.slice(-1)[0]).forEach((pSucc, index) => {
+      const succState: number[] = [...levels]
+      succState[succState.length - 1] = index + levels.slice(-1)[0] + 1
+      succProb.push({
+        succ: succState,
+        prob: pSucc,
+      })
+    })
+    succProb.push({
+      succ: levels,
+      prob: pSelf,
+    })
+  }
+
   return (
     <div>
       <Card className="m-2">
@@ -488,7 +519,7 @@ function ActionResults({ results, levels, exp, candyPrices, costUp, costSac }: {
       </Card>
       <Card className="m-2">
         <CardHeader>
-          <CardTitle>Details</CardTitle>
+          <CardTitle>Cost Breakdown</CardTitle>
         </CardHeader>
         <CardContent>
           <Label htmlFor="actionSelect">Action</Label>
@@ -553,6 +584,14 @@ function ActionResults({ results, levels, exp, candyPrices, costUp, costSac }: {
           <div className="m-2">
             Total Cost: { totalCost }
           </div>
+        </CardContent>
+      </Card>
+      <Card className="m-2">
+        <CardHeader>
+          <CardTitle>Probabilities</CardTitle>
+        </CardHeader>
+        <CardContent>
+
         </CardContent>
       </Card>
     </div>
