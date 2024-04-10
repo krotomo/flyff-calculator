@@ -280,6 +280,34 @@ function costFromActionCount(
   return cost
 }
 
+// Get successor states and probabilities given an action and state
+function successorsFromAction(
+  state: number[],
+  action: string,
+) {
+  const successors = {} as Record<string, number>
+  if (action === "up") {
+    const upTier = tiers[state.length + 1]
+    for (const [index, pSucc] of p[upTier]![upTier]!.entries()) {
+      const succState = [...state]
+      succState.push(index + 1)
+      successors[JSON.stringify(succState)] = pSucc
+    }
+  }
+  else {
+    const tier = tiers[state.length]
+    let pSelf = 0
+    p[tier][action as SacTier]?.slice(0, state.slice(-1)[0]).forEach((pSelfPart) => pSelf += pSelfPart)
+    p[tier][action as SacTier]?.slice(state.slice(-1)[0]).forEach((pSucc, index) => {
+      const succState: number[] = [...state]
+      succState[succState.length - 1] = index + state.slice(-1)[0] + 1
+      successors[JSON.stringify(succState)] = pSucc
+    })
+    successors[JSON.stringify(state)] = pSelf
+  }
+  return successors
+}
+
 // All the cost calculation
 function calculatePetCost(
   petType: Pet, 
@@ -293,28 +321,26 @@ function calculatePetCost(
   function calculateActionCount(state: number[], action: string): ActionCount {
     const result = new ActionCount()
     const tier = tiers[state.length]
+    const successors = successorsFromAction(state, action)
     if (action === "up") {
-      const upTier = tiers[state.length+1]
-      for (const [index, pSucc] of p[upTier]![upTier]!.entries()) {
-        const succState: number[] = [...state]
-        succState.push(index + 1)
-        const succActionCount: ActionCount = stateActionCounts[JSON.stringify(succState)][0].actionCount
+      for (const [ succState, succProb ] of Object.entries(successors)) {
+        const succActionCount: ActionCount = stateActionCounts[succState][0].actionCount
         if (succActionCount === badEndActionCount) {
           return badEndActionCount
         }
-        result.addFactor(succActionCount, pSucc)
+        result.addFactor(succActionCount, succProb)
       }
       result.up[tier as RaiseTier] += 1
     }
     else {
-      let pSelf = 0
-      p[tier][action as SacTier]?.slice(0, state.slice(-1)[0]).forEach((pSelfPart) => pSelf += pSelfPart)
-      p[tier][action as SacTier]?.slice(state.slice(-1)[0]).forEach((pSucc, index) => {
-        const succState: number[] = [...state]
-        succState[succState.length - 1] = index + state.slice(-1)[0] + 1
-        result.addFactor(stateActionCounts[JSON.stringify(succState)][0].actionCount, pSucc/(1-pSelf))
-      })
-      result.sac[action as SacTier] += 1/(1-pSelf)
+      const selfState = JSON.stringify(state)
+      const selfProb = successors[selfState]
+      result.sac[action as SacTier] += 1/(1-selfProb)
+      for (const [ succState, succProb ] of Object.entries(successors)) {
+        if (succState !== selfState) {
+          result.addFactor(stateActionCounts[succState][0].actionCount, succProb/(1-selfProb))
+        }
+      }
     }
     return result
   }
@@ -454,37 +480,6 @@ function ActionResults({ results, levels, exp, costUp, costSac }: {
     count: "-",
     cost: candyCost,
   })
-
-  // Probabilities
-  const succProb = [] as { "succ": number[], "prob": number }[]
-  if (selectedAction === "up") {
-    const upTier = tiers[levels.length + 1]
-    for (const [index, pSucc] of p[upTier]![upTier]!.entries()) {
-      const succState = [...levels]
-      succState.push(index + 1)
-      succProb.push({
-        succ: succState,
-        prob: pSucc,
-      })
-    }
-  }
-  else {
-    const tier = tiers[levels.length]
-    let pSelf = 0
-    p[tier][selectedAction as SacTier]?.slice(0, levels.slice(-1)[0]).forEach((pSelfPart) => pSelf += pSelfPart)
-    p[tier][selectedAction as SacTier]?.slice(levels.slice(-1)[0]).forEach((pSucc, index) => {
-      const succState: number[] = [...levels]
-      succState[succState.length - 1] = index + levels.slice(-1)[0] + 1
-      succProb.push({
-        succ: succState,
-        prob: pSucc,
-      })
-    })
-    succProb.push({
-      succ: levels,
-      prob: pSelf,
-    })
-  }
 
   return (
     <div>

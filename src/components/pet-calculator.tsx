@@ -4,7 +4,6 @@ import { useState } from "react"
 
 export default function PetCalculator() {
   // form state
-  const [ showResults, setShowResults ] = useState<boolean>(false)
   const [ petType, setPetType ] = useState<Pet>()
   const [ levels, setLevels ] = useState<number[]>()
   const [ exp, setExp ] = useState<number>()
@@ -29,7 +28,6 @@ export default function PetCalculator() {
     setLevelsGoal(newLevelsGoal)
     setSacPrices(newSacPrices)
     setCandyPrices(newCandyPrices)
-    setShowResults(true)
   }
   
 
