@@ -25,6 +25,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import patternFormatter from "react-number-format"
 
 // Number formatting
 const numberFormat = new Intl.NumberFormat("en-us")
@@ -106,6 +107,18 @@ const statsByPetType: Record<Pet, number[]> = {
   "tiger": [1, 2, 4, 7, 11, 15, 17, 24, 33],
   "crab": [2, 3, 4, 5, 6, 7, 9, 11, 16],
   "lion": [1, 2, 4, 7, 11, 15, 17, 24, 33]
+}
+
+const statNameByPetTypeShort: Record<Pet, string> = {
+  "unicorn": " HP",
+  "dragon": " ATK",
+  "griffin": " DEF",
+  "angel": "% CC",
+  "crab": "% CD",
+  "tiger": " STR",
+  "lion": " STA",
+  "rabbit": " DEX",
+  "fox": " INT",
 }
 
 // Array of pet level states. Sorted into arrays by depth so our algorithm is fast.
@@ -397,8 +410,9 @@ function actionString(action: string, state: number[]): string {
   }
 }
 
-function ActionResults({ results, levels, exp, costUp, costSac }: {
+function ActionResults({ results, petType, levels, exp, costUp, costSac }: {
   results: Results
+  petType: Pet
   levels: number[]
   exp: number
   candyPrices: Record<RaiseTier, number>
@@ -480,6 +494,28 @@ function ActionResults({ results, levels, exp, costUp, costSac }: {
     count: "-",
     cost: candyCost,
   })
+
+  // Probabilities
+  const successors = successorsFromAction(levels, selectedAction)
+  const successorStates = Object.keys(successors)
+  successorStates.sort((a, b) => {
+    if (a.length !== b.length) return (a.length - b.length)
+    const aArr = JSON.parse(a) as number[]
+    const bArr = JSON.parse(b) as number[]
+    const length = aArr.length
+    return aArr[length] - bArr[length]
+  })
+  const successorTableEntries: Record<"state" | "stat" | "cost" | "prob", string>[] = []
+  for (const succState of successorStates) {
+    const state = JSON.parse(succState) as number[]
+    const tableEntry = {
+      state: state.join("/"),
+      stat: statsTotal(state, petType) + statNameByPetTypeShort[petType],
+      cost: formatThousands(costFromActionCount(results[succState][0].actionCount, costUp, costSac)),
+      prob: Math.round(successors[succState] * 100) + "%",
+    }
+    successorTableEntries.push(tableEntry)
+  }
 
   return (
     <div>
@@ -583,10 +619,31 @@ function ActionResults({ results, levels, exp, costUp, costSac }: {
       </Card>
       <Card className="m-2">
         <CardHeader>
-          <CardTitle>Probabilities</CardTitle>
+          <CardTitle>Successors</CardTitle>
         </CardHeader>
         <CardContent>
-
+          <div className="m-2">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Levels</TableHead>
+                  <TableHead className="text-right">Stats</TableHead>
+                  <TableHead className="text-right">Remaining Cost</TableHead>
+                  <TableHead className="text-right">Probability</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {successorTableEntries.map(({state, stat, cost, prob}) => (
+                  <TableRow>
+                    <TableCell className="text-left">{state}</TableCell>
+                    <TableCell className="text-right">{stat}</TableCell>
+                    <TableCell className="text-right">{cost}</TableCell>
+                    <TableCell className="text-right">{prob}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
         </CardContent>
       </Card>
     </div>
@@ -633,6 +690,7 @@ export default function PetResults({ petType, levels, exp, statGoal, levelsGoal,
   }
   return (
     <ActionResults 
+      petType={petType}
       results={results}
       levels={levels}
       exp={exp}
