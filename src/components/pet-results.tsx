@@ -436,12 +436,15 @@ function ActionResults({ results, petType, levels, exp, costUp, costSac }: {
   const bestAction = actionString(currentResult[0].action, levels)
 
   // Generate table entries for actions table
-  const actionsTableEntries: Record<"action" | "cost", string>[] = []
+  const actionsTableEntries: Record<"action" | "actionCost" | "totalCost", string>[] = []
+  const tier = tiers[levels.length]
   results[currentState].forEach(({action, actionCount}) => {
-    const costNumber = costFromActionCount(actionCount, costUp, costSac)
+    const actionCostNumber = action === "up" ? costUp[tier as RaiseTier] : costSac[action as SacTier]
+    const totalCostNumber = costFromActionCount(actionCount, costUp, costSac)
     const tableEntry = {
       action: actionString(action, levels),
-      cost: isFinite(costNumber) ? formatThousands(costNumber) : "Goal Impossible",
+      actionCost: formatThousands(actionCostNumber),
+      totalCost: isFinite(totalCostNumber) ? formatThousands(totalCostNumber) : "Goal Impossible",
     }
     actionsTableEntries.push(tableEntry)
   })
@@ -533,14 +536,16 @@ function ActionResults({ results, petType, levels, exp, costUp, costSac }: {
               <TableHeader>
                 <TableRow>
                   <TableHead>Action</TableHead>
+                  <TableHead className="text-right">Action Cost</TableHead>
                   <TableHead className="text-right">Total Cost</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {actionsTableEntries.map(({action, cost}) => (
+                {actionsTableEntries.map(({action, actionCost, totalCost}) => (
                   <TableRow key={action}>
                     <TableCell className="text-left">{action}</TableCell>
-                    <TableCell className="text-right">{cost}</TableCell>
+                    <TableCell className="text-right">{actionCost}</TableCell>
+                    <TableCell className="text-right">{totalCost}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
