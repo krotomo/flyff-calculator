@@ -243,8 +243,8 @@ function PetInput({ setPetState }: {
                 )
               }
             />
-            <div className="flex flex-row">
-              <div className="pr-1">
+            <div className="flex flex-row justify-center">
+              <div className="flex-grow pr-1">
                 <FormField
                   control={form.control}
                   name="levels"
@@ -269,7 +269,7 @@ function PetInput({ setPetState }: {
                   }
                 />
               </div>
-              <div className="pl-1">
+              <div className="flex-grow pl-1">
                 <FormField
                   control={form.control}
                   name="exp"
@@ -300,8 +300,8 @@ function PetInput({ setPetState }: {
             <CardTitle>Target Pet</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="flex flex-row">
-              <div className="pr-1">
+            <div className="flex flex-row justify-center">
+              <div className="flex-grow pr-1">
                 <FormField
                   control={form.control}
                   name="levelsGoal"
@@ -326,7 +326,7 @@ function PetInput({ setPetState }: {
                   }
                 />
               </div>
-              <div className="pl-1">
+              <div className="flex-grow pl-1">
                 <FormField 
                   control={form.control}
                   name="statGoal"
@@ -350,7 +350,12 @@ function PetInput({ setPetState }: {
                 />
               </div>
             </div>
-            <Button type="submit" disabled={!statGoal && (!levelsGoal || levelsGoal.startsWith(" "))}>Calculate</Button>
+            <div className="text-center">
+              <Button 
+                type="submit" 
+                disabled={!statGoal && (!levelsGoal || levelsGoal.startsWith(" "))}
+              >Calculate</Button>
+            </div>
           </CardContent>
         </Card>
         <Card className="m-2">
@@ -359,8 +364,8 @@ function PetInput({ setPetState }: {
           </CardHeader>
           <CardContent>
             <div className="flex justify-center">
-              <div className="flex-1 pr-1">
-                <h3>Sac Pet</h3>
+              <div className="flex-1 pr-4 border-r">
+                <h3 className="font-medium text-slate-500">Sac Pet</h3>
                 {
                   sacPriceFields.map((field, index: number) => {
                     return (              
@@ -391,8 +396,8 @@ function PetInput({ setPetState }: {
                   })
                 }
               </div>
-              <div className="flex-1 pl-1">
-                <h3>Pet Candy</h3>
+              <div className="flex-1 pl-4">
+                <h3 className="font-medium text-slate-500">Pet Candy</h3>
                 {
                   candyPriceFields.map((field, index: number) => {
                     return (              

@@ -477,8 +477,10 @@ function ActionResults({ results, petType, levels, exp, costUp, costSac }: {
     const raiseCount = selectedActionCount.up[tier as RaiseTier]
     if (raiseCount > 0) {
       const nextTier = tiers[tiers.indexOf(tier as Tier) + 1]
+      const tierString = tier[0].toUpperCase() + tier.slice(1)
+      const nextTierString = nextTier.toUpperCase()
       const tableEntry = {
-        action: `${tier}\u2192${nextTier}`.toUpperCase(),
+        action: `${tierString} to ${nextTierString}`,
         candy: tier === "egg" ? "F" : tier.toUpperCase(),
         count: formatThousands(raiseCount * candyCount[tier as RaiseTier]),
         cost: formatThousands(raiseCount * costUp[tier as RaiseTier])
@@ -517,9 +519,17 @@ function ActionResults({ results, petType, levels, exp, costUp, costSac }: {
         </CardHeader>
         <CardContent>
           <div>
-            <div className="mb-4">    
-              <div>Best Average Cost: { bestCost }</div>
-              <div>Best Action: { bestAction }</div>
+            <div className="flex justify-center mb-4 font-medium text-slate-500">
+              <table>
+                <tr>
+                  <td className="text-left pr-6">Best Average Cost:</td>
+                  <td className="text-right">{ bestCost }</td>
+                </tr>
+                <tr>
+                  <td className="text-left">Best Action:</td>
+                  <td className="text-right">{ bestAction }</td>
+                </tr>
+              </table>
             </div>
             <Table>
               <TableHeader>
@@ -549,7 +559,7 @@ function ActionResults({ results, petType, levels, exp, costUp, costSac }: {
         <CardContent>
           <Label htmlFor="actionSelect">Action</Label>
           <Select value={selectedAction} onValueChange={(e) => setSelectedAction(e)}>
-            <SelectTrigger id="actionSelect">
+            <SelectTrigger id="actionSelect" className="mb-4">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -562,8 +572,17 @@ function ActionResults({ results, petType, levels, exp, costUp, costSac }: {
               }
             </SelectContent>
           </Select>
-          <div className="m-2">
+          <div>
             <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Total Cost</TableHead>
+                  <TableHead></TableHead>
+                  <TableHead className="text-right">{totalCost}</TableHead>
+                </TableRow>
+              </TableHeader>
+            </Table>
+            <Table className="border-b">
               <TableHeader>
                 <TableRow>
                   <TableHead>Sac Cost</TableHead>
@@ -571,7 +590,7 @@ function ActionResults({ results, petType, levels, exp, costUp, costSac }: {
                   <TableHead className="text-right">{sacCost}</TableHead>
                 </TableRow>
                 <TableRow>
-                  <TableHead>Tier</TableHead>
+                  <TableHead>Sac Tier</TableHead>
                   <TableHead className="text-right">Count</TableHead>
                   <TableHead className="text-right">Cost</TableHead>
                 </TableRow>
@@ -613,9 +632,6 @@ function ActionResults({ results, petType, levels, exp, costUp, costSac }: {
               </TableBody>
             </Table>
           </div>
-          <div className="m-2">
-            Total Cost: { totalCost }
-          </div>
         </CardContent>
       </Card>
       <Card className="m-2">
@@ -623,7 +639,7 @@ function ActionResults({ results, petType, levels, exp, costUp, costSac }: {
           <CardTitle>Successors</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="m-2">
+          <div>
             <Table>
               <TableHeader>
                 <TableRow>
@@ -662,8 +678,8 @@ export default function PetResults({ petType, levels, exp, statGoal, levelsGoal,
 }) {
   if (!petType) {
     return (
-      <div className="my-20">
-        <i className="text-gray-500">Please complete Pet Info to see results.</i>
+      <div className="my-20 text-center">
+        <i className="text-slate-500">Please complete Pet Info to see results.</i>
       </div>
     )
   }
