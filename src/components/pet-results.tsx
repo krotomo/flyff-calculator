@@ -468,11 +468,6 @@ function ActionResults({ results, petType, levels, exp, costUp, costSac }: {
       sacCostTableEntries.push(tableEntry)
     }
   }
-  sacCostTableEntries.push({
-    action: "Total",
-    count: "-",
-    cost: sacCost,
-  })
 
   // Candy Cost
   const candyCostTableEntries: Record<"action" | "candy" | "count" | "cost", string>[] = []
@@ -491,12 +486,6 @@ function ActionResults({ results, petType, levels, exp, costUp, costSac }: {
       candyCostTableEntries.push(tableEntry)
     }
   }
-  candyCostTableEntries.push({
-    action: "Total",
-    candy: "-",
-    count: "-",
-    cost: candyCost,
-  })
 
   // Probabilities
   const successors = successorsFromAction(levels, selectedAction)
@@ -574,11 +563,15 @@ function ActionResults({ results, petType, levels, exp, costUp, costSac }: {
             </SelectContent>
           </Select>
           <div className="m-2">
-            <Label>Sac Pet Cost</Label>
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Sac Tier</TableHead>
+                  <TableHead>Sac Cost</TableHead>
+                  <TableHead></TableHead>
+                  <TableHead className="text-right">{sacCost}</TableHead>
+                </TableRow>
+                <TableRow>
+                  <TableHead>Tier</TableHead>
                   <TableHead className="text-right">Count</TableHead>
                   <TableHead className="text-right">Cost</TableHead>
                 </TableRow>
@@ -593,11 +586,14 @@ function ActionResults({ results, petType, levels, exp, costUp, costSac }: {
                 ))}
               </TableBody>
             </Table>
-          </div>
-          <div className="m-2">
-            <Label>Pet Candy Cost</Label>
             <Table>
               <TableHeader>
+                <TableRow>
+                  <TableHead>Candy Cost</TableHead>
+                  <TableHead></TableHead>
+                  <TableHead></TableHead>
+                  <TableHead className="text-right">{candyCost}</TableHead>
+                </TableRow>
                 <TableRow>
                   <TableHead>Raise Tier</TableHead>
                   <TableHead>Candy</TableHead>
