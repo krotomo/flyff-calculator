@@ -424,11 +424,13 @@ function ActionResults({ results, petType, levels, exp, costUp, costSac }: {
   const currentResult = results[currentState]
 
   // Selected action
-  const [selectedAction, setSelectedAction] = useState<string>(currentResult[0].action)
+  const [costAction, setCostAction] = useState<string>(currentResult[0].action)
+  const [successorAction, setSuccessorAction] = useState<string>(currentResult[0].action)
 
   // Update selected action when results change
   useEffect(() => {
-    setSelectedAction(currentResult[0].action)
+    setCostAction(currentResult[0].action)
+    setSuccessorAction(currentResult[0].action)
   }, [currentResult])
 
   // Summary info
@@ -450,15 +452,15 @@ function ActionResults({ results, petType, levels, exp, costUp, costSac }: {
   })
 
   // Cost details
-  const selectedActionCount = currentResult.find((val) => { return val.action === selectedAction })?.actionCount 
+  const costActionCount = currentResult.find((val) => { return val.action === costAction })?.actionCount 
     || currentResult[0].actionCount
-  const totalCost = formatThousands(costFromActionCount(selectedActionCount, costUp, costSac))
+  const totalCost = formatThousands(costFromActionCount(costActionCount, costUp, costSac))
 
   // Sac Cost
   const sacCostTableEntries: Record<"action" | "count" | "cost", string>[] = []
-  const sacCost = formatThousands(sacCostFromActionCount(selectedActionCount, costSac))
-  for (const tier in selectedActionCount.sac) {
-    const count = selectedActionCount.sac[tier as SacTier]
+  const sacCost = formatThousands(sacCostFromActionCount(costActionCount, costSac))
+  for (const tier in costActionCount.sac) {
+    const count = costActionCount.sac[tier as SacTier]
     if (count > 0) {
       const tableEntry = {
         action: tier.toUpperCase(),
@@ -471,10 +473,10 @@ function ActionResults({ results, petType, levels, exp, costUp, costSac }: {
 
   // Candy Cost
   const candyCostTableEntries: Record<"action" | "candy" | "count" | "cost", string>[] = []
-  const candyCost = formatThousands(candyCostFromActionCount(selectedActionCount, costUp))
+  const candyCost = formatThousands(candyCostFromActionCount(costActionCount, costUp))
   const candyCount = candyToRaise(levels, exp)
-  for (const tier in selectedActionCount.up) {
-    const raiseCount = selectedActionCount.up[tier as RaiseTier]
+  for (const tier in costActionCount.up) {
+    const raiseCount = costActionCount.up[tier as RaiseTier]
     if (raiseCount > 0) {
       const nextTier = tiers[tiers.indexOf(tier as Tier) + 1]
       const tierString = tier[0].toUpperCase() + tier.slice(1)
@@ -490,7 +492,7 @@ function ActionResults({ results, petType, levels, exp, costUp, costSac }: {
   }
 
   // Probabilities
-  const successors = successorsFromAction(levels, selectedAction)
+  const successors = successorsFromAction(levels, successorAction)
   const successorStates = Object.keys(successors)
   successorStates.sort((a, b) => {
     if (a.length !== b.length) return (a.length - b.length)
@@ -502,10 +504,15 @@ function ActionResults({ results, petType, levels, exp, costUp, costSac }: {
   const successorTableEntries: Record<"state" | "stat" | "cost" | "prob", string>[] = []
   for (const succState of successorStates) {
     const state = JSON.parse(succState) as number[]
+    const succActionCount = 
+      succState === currentState 
+      ? ( results[succState].find((val) => (val.action === successorAction)) || results[succState][0] ).actionCount
+      : results[succState][0].actionCount
+    const costNumber = costFromActionCount(succActionCount, costUp, costSac)
     const tableEntry = {
       state: state.join("/"),
       stat: statsTotal(state, petType) + statNameByPetTypeShort[petType],
-      cost: formatThousands(costFromActionCount(results[succState][0].actionCount, costUp, costSac)),
+      cost: isFinite(costNumber) ? formatThousands(costNumber) : "Goal Impossible",
       prob: Math.round(successors[succState] * 100) + "%",
     }
     successorTableEntries.push(tableEntry)
@@ -558,14 +565,14 @@ function ActionResults({ results, petType, levels, exp, costUp, costSac }: {
         </CardHeader>
         <CardContent>
           <Label htmlFor="actionSelect">Action</Label>
-          <Select value={selectedAction} onValueChange={(e) => setSelectedAction(e)}>
+          <Select value={costAction} onValueChange={(e) => setCostAction(e)}>
             <SelectTrigger id="actionSelect" className="mb-4">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
               {
-                results[currentState].map(({ action }, index) => {
-                  return(
+                results[currentState].map(({ action, actionCount }, index) => {
+                  return actionCount !== badEndActionCount && (
                     <SelectItem value={action}>{ index === 0 ? actionString(action, levels) + " (Best)" : actionString(action, levels) }</SelectItem>
                   )
                 })
@@ -573,21 +580,10 @@ function ActionResults({ results, petType, levels, exp, costUp, costSac }: {
             </SelectContent>
           </Select>
           <div>
-            <Table>
+            <Table className="mb-2">
               <TableHeader>
                 <TableRow>
-                  <TableHead>Total Cost</TableHead>
-                  <TableHead></TableHead>
-                  <TableHead className="text-right">{totalCost}</TableHead>
-                </TableRow>
-              </TableHeader>
-            </Table>
-            <Table className="border-b">
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Sac Cost</TableHead>
-                  <TableHead></TableHead>
-                  <TableHead className="text-right">{sacCost}</TableHead>
+                  <TableHead>Sac Pet Cost</TableHead>
                 </TableRow>
                 <TableRow>
                   <TableHead>Sac Tier</TableHead>
@@ -603,15 +599,17 @@ function ActionResults({ results, petType, levels, exp, costUp, costSac }: {
                     <TableCell className="text-right">{cost}</TableCell>
                   </TableRow>
                 ))}
+                <TableRow>
+                  <TableCell className="text-left">Total (Sac Pet)</TableCell>
+                  <TableCell></TableCell>
+                  <TableCell className="text-right">{sacCost}</TableCell>
+                </TableRow>
               </TableBody>
             </Table>
-            <Table>
+            <Table className="mb-2">
               <TableHeader>
                 <TableRow>
-                  <TableHead>Candy Cost</TableHead>
-                  <TableHead></TableHead>
-                  <TableHead></TableHead>
-                  <TableHead className="text-right">{candyCost}</TableHead>
+                  <TableHead>Pet Candy Cost</TableHead>
                 </TableRow>
                 <TableRow>
                   <TableHead>Raise Tier</TableHead>
@@ -629,6 +627,20 @@ function ActionResults({ results, petType, levels, exp, costUp, costSac }: {
                     <TableCell className="text-right">{cost}</TableCell>
                   </TableRow>
                 ))}
+                <TableRow>
+                  <TableCell className="text-left">Total (Pet Candy)</TableCell>
+                  <TableCell></TableCell>
+                  <TableCell></TableCell>
+                  <TableCell className="text-right">{candyCost}</TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
+            <Table>
+              <TableBody>
+                <TableRow className="font-medium text-slate-500">
+                  <TableCell className="text-left">Total Cost</TableCell>
+                  <TableCell className="text-right">{totalCost}</TableCell>
+                </TableRow>
               </TableBody>
             </Table>
           </div>
@@ -636,31 +648,46 @@ function ActionResults({ results, petType, levels, exp, costUp, costSac }: {
       </Card>
       <Card className="m-2">
         <CardHeader>
-          <CardTitle>Successors</CardTitle>
+          <CardTitle>Possible Outcomes</CardTitle>
         </CardHeader>
         <CardContent>
-          <div>
-            <Table>
-              <TableHeader>
+          <Label htmlFor="actionSelect">Action</Label>
+          <Select value={successorAction} onValueChange={(e) => setSuccessorAction(e)}>
+            <SelectTrigger id="actionSelect" className="mb-4">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {
+                results[currentState].map(({ action }, index) => {
+                  return(
+                    <SelectItem value={action}>
+                      { index === 0 ? actionString(action, levels) + " (Best)" : actionString(action, levels) }
+                    </SelectItem>
+                  )
+                })
+              }
+            </SelectContent>
+          </Select>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Levels</TableHead>
+                <TableHead className="text-right">Stats</TableHead>
+                <TableHead className="text-right">Remaining Cost</TableHead>
+                <TableHead className="text-right">Probability</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {successorTableEntries.map(({state, stat, cost, prob}) => (
                 <TableRow>
-                  <TableHead>Levels</TableHead>
-                  <TableHead className="text-right">Stats</TableHead>
-                  <TableHead className="text-right">Remaining Cost</TableHead>
-                  <TableHead className="text-right">Probability</TableHead>
+                  <TableCell className="text-left">{state}</TableCell>
+                  <TableCell className="text-right">{stat}</TableCell>
+                  <TableCell className="text-right">{cost}</TableCell>
+                  <TableCell className="text-right">{prob}</TableCell>
                 </TableRow>
-              </TableHeader>
-              <TableBody>
-                {successorTableEntries.map(({state, stat, cost, prob}) => (
-                  <TableRow>
-                    <TableCell className="text-left">{state}</TableCell>
-                    <TableCell className="text-right">{stat}</TableCell>
-                    <TableCell className="text-right">{cost}</TableCell>
-                    <TableCell className="text-right">{prob}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
+              ))}
+            </TableBody>
+          </Table>
         </CardContent>
       </Card>
     </div>

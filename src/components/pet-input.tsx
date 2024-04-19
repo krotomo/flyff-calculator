@@ -354,7 +354,7 @@ function PetInput({ setPetState }: {
               <Button 
                 type="submit" 
                 disabled={!statGoal && (!levelsGoal || levelsGoal.startsWith(" "))}
-              >Calculate</Button>
+              >Calculate Cost</Button>
             </div>
           </CardContent>
         </Card>
@@ -363,7 +363,7 @@ function PetInput({ setPetState }: {
             <CardTitle>Prices</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="flex justify-center">
+            <div className="flex justify-center mb-4">
               <div className="flex-1 pr-4 border-r">
                 <h3 className="font-medium text-slate-500">Sac Pet</h3>
                 {
@@ -428,6 +428,9 @@ function PetInput({ setPetState }: {
                   })
                 }
               </div>
+            </div>
+            <div className="text-center">
+              <Button>Reset Default Prices</Button>
             </div>
           </CardContent>
         </Card>

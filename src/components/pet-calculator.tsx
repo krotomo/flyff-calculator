@@ -57,6 +57,7 @@ export default function PetCalculator() {
             ></PetResults>
           </div>
         </div>
+        <div className="m-2 text-slate-500">Made by krotomo</div>
       </div>
     </div>
   )
