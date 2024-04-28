@@ -157,6 +157,7 @@ function actions(state: number[]): string[] {
       result.push(sac)
     }
   }
+  if (result.length === 0) result.push("none")
   return result
 }
 
@@ -230,11 +231,9 @@ class ActionCount {
   }
 }
 
-type Results = {
-  [key: string]: {
-    action: string,
-    actionCount: ActionCount
-  }[]
+type Result = {
+  action: string,
+  actionCount: ActionCount
 }
 
 // Flyweight action counts for good and bad ends
@@ -250,7 +249,7 @@ for (const tier in badEndActionCount.up) {
 function candyToRaise(state: number[], exp: number) {
   const result = Object.assign({}, candyPerTier)
   const tier = tiers[state.length]
-  result[tier as RaiseTier] = candyPerTier[tier as RaiseTier] * (1-(( exp ? exp : 0 )/100))
+  result[tier as RaiseTier] = Math.round(candyPerTier[tier as RaiseTier] * (1-(( exp ? exp : 0 )/100)))
   return result
 }
 
@@ -329,7 +328,7 @@ function calculatePetCost(
   costUp: Record<RaiseTier, number>, 
   costSac: Record<SacTier, number>
 ) {
-  const stateActionCounts: Results = {}
+  const stateActionCounts: Record<string, Result[]> = {}
   
   function calculateActionCount(state: number[], action: string): ActionCount {
     const result = new ActionCount()
@@ -364,16 +363,16 @@ function calculatePetCost(
   for (let depth: number = statesByDepth.length-1; depth >= 0; depth--) {
     for (const state of statesByDepth[depth]) {
       if (isGoodEnd(state, petType, levelsGoal, statGoal)) {
-        stateActionCounts[JSON.stringify(state)] = [{
-          action: "good",
+        stateActionCounts[JSON.stringify(state)] = actions(state).map((action) => ({
+          action: action,
           actionCount: goodEndActionCount
-        }]
+        }))
       }
       else if (isBadEnd(state, petType, levelsGoal, statGoal)) {
-        stateActionCounts[JSON.stringify(state)] = [{
-          action: "bad",
+        stateActionCounts[JSON.stringify(state)] = actions(state).map((action) => ({
+          action: action,
           actionCount: badEndActionCount
-        }]
+        }))
       }
       else {
         const newStateActionCounts = []
@@ -408,6 +407,9 @@ function actionString(action: string, state: number[]): string {
   if (action === "up") {
     return `Raise to ${tiers[state.length+1].toUpperCase()}`
   }
+  else if (action === "none") {
+    return "No Action"
+  }
   else {
     return `Sacrifice ${action.toUpperCase()} Pet`
   }
@@ -426,8 +428,15 @@ function BadEndTable({ petType, levels, levelsGoal, statGoal }: {
   // best pet
   const perfectLevels = [1, 2, 3, 4, 5, 7, 9]
   const bestLevels = levels.slice(0, levels.length-1).concat(perfectLevels.slice(levels.length-1))
+  const bestLevelsString = bestLevels.join("/")
   const bestStat = statsTotal(bestLevels, petType)
   const bestStatString = bestStat + statNameByPetTypeShort[petType]
+
+  // goals
+  const statGoalMet = statGoal ? bestStat >= statGoal : true
+  const levelsGoalMet = levelsGoal.reduce((acc, val, index) => {
+    return acc && bestLevels[index] >= val
+  }, true)
 
   return (
     <div>
@@ -447,8 +456,8 @@ function BadEndTable({ petType, levels, levelsGoal, statGoal }: {
           </TableRow>
           <TableRow>
             <TableHead>Best Possible Pet</TableHead>
-            <TableCell>{ bestLevels.join("/") }</TableCell>
-            <TableCell className="text-right">{ bestStatString }</TableCell>
+            <TableCell className={levelsGoalMet ? "" : "text-red-500"}>{ bestLevelsString }</TableCell>
+            <TableCell className={statGoalMet ? "text-right" : "text-right text-red-500"}>{ bestStatString }</TableCell>
           </TableRow>
         </TableBody>
       </Table>
@@ -456,50 +465,14 @@ function BadEndTable({ petType, levels, levelsGoal, statGoal }: {
   )
 }
 
-function ActionResults({ results, petType, levels, exp, levelsGoal, statGoal, costUp, costSac }: {
-  results: Results
-  petType: Pet
-  levels: number[]
-  exp: number
-  levelsGoal: number[]
-  statGoal: number
-  candyPrices: Record<RaiseTier, number>
+function CostTable({ selectedActionCount, levels, exp, costUp, costSac }: {
+  selectedActionCount: ActionCount,
+  levels: number[],
+  exp: number,
   costUp: Record<RaiseTier, number>
   costSac: Record<SacTier, number>
 }) {
-  // currentState and currentResult
-  const currentState = JSON.stringify(levels)
-  const currentResult = results[currentState]
-
-  // Selected action
-  const [selectedAction, setSelectedAction] = useState<string>(currentResult[0].action)
-
-  // Update selected action when results change
-  useEffect(() => {
-    setSelectedAction(currentResult[0].action)
-  }, [currentResult])
-
-  // Summary info
-  const bestCost = formatThousands(costFromActionCount(currentResult[0].actionCount, costUp, costSac))
-  const bestAction = actionString(currentResult[0].action, levels)
-
-  // Generate table entries for actions table
-  const actionsTableEntries: Record<"action" | "actionCost" | "totalCost", string>[] = []
-  const tier = tiers[levels.length]
-  currentResult.forEach(({action, actionCount}) => {
-    const actionCostNumber = action === "up" ? costUp[tier as RaiseTier] : costSac[action as SacTier]
-    const totalCostNumber = costFromActionCount(actionCount, costUp, costSac)
-    const tableEntry = {
-      action: actionString(action, levels),
-      actionCost: formatThousands(actionCostNumber),
-      totalCost: isFinite(totalCostNumber) ? formatThousands(totalCostNumber) : "Goal Impossible",
-    }
-    actionsTableEntries.push(tableEntry)
-  })
-
   // Cost details
-  const selectedActionCount = currentResult.find((val) => { return val.action === selectedAction })?.actionCount 
-    || currentResult[0].actionCount
   const totalCost = formatThousands(costFromActionCount(selectedActionCount, costUp, costSac))
 
   // Sac Cost
@@ -523,6 +496,7 @@ function ActionResults({ results, petType, levels, exp, levelsGoal, statGoal, co
   const candyCount = candyToRaise(levels, exp)
   for (const tier in selectedActionCount.up) {
     const raiseCount = selectedActionCount.up[tier as RaiseTier]
+    const candyCountAverage = raiseCount * candyCount[tier as RaiseTier]
     if (raiseCount > 0) {
       const nextTier = tiers[tiers.indexOf(tier as Tier) + 1]
       const tierString = tier[0].toUpperCase() + tier.slice(1)
@@ -530,12 +504,130 @@ function ActionResults({ results, petType, levels, exp, levelsGoal, statGoal, co
       const tableEntry = {
         action: `${tierString} to ${nextTierString}`,
         candy: tier === "egg" ? "F" : tier.toUpperCase(),
-        count: formatThousands(raiseCount * candyCount[tier as RaiseTier]),
+        count: numberFormat.format(Math.round(candyCountAverage * 10) / 10),
         cost: formatThousands(raiseCount * costUp[tier as RaiseTier])
       }
       candyCostTableEntries.push(tableEntry)
     }
   }
+  
+  return (
+    <div>
+      <Table className="mb-2">
+        <TableHeader>
+          <TableRow>
+            <TableHead>Sac Pet Cost</TableHead>
+          </TableRow>
+          <TableRow>
+            <TableHead>Sac Tier</TableHead>
+            <TableHead className="text-right">Count</TableHead>
+            <TableHead className="text-right">Cost</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {sacCostTableEntries.map(({action, count, cost}) => (
+            <TableRow key={"sacCost" + action}>
+              <TableCell className="text-left">{action}</TableCell>
+              <TableCell className="text-right">{count}</TableCell>
+              <TableCell className="text-right">{cost}</TableCell>
+            </TableRow>
+          ))}
+          <TableRow>
+            <TableCell className="text-left">Total (Sac Pet)</TableCell>
+            <TableCell></TableCell>
+            <TableCell className="text-right">{sacCost}</TableCell>
+          </TableRow>
+        </TableBody>
+      </Table>
+      <Table className="mb-2">
+        <TableHeader>
+          <TableRow>
+            <TableHead>Pet Candy Cost</TableHead>
+          </TableRow>
+          <TableRow>
+            <TableHead>Raise Tier</TableHead>
+            <TableHead>Candy</TableHead>
+            <TableHead className="text-right">Count</TableHead>
+            <TableHead className="text-right">Cost</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {candyCostTableEntries.map(({action, candy, count, cost}) => (
+            <TableRow key={"candyCost" + action}>
+              <TableCell className="text-left">{action}</TableCell>
+              <TableCell className="text-left">{candy}</TableCell>
+              <TableCell className="text-right">{count}</TableCell>
+              <TableCell className="text-right">{cost}</TableCell>
+            </TableRow>
+          ))}
+          <TableRow>
+            <TableCell className="text-left">Total (Pet Candy)</TableCell>
+            <TableCell></TableCell>
+            <TableCell></TableCell>
+            <TableCell className="text-right">{candyCost}</TableCell>
+          </TableRow>
+        </TableBody>
+      </Table>
+      <Table>
+        <TableBody>
+          <TableRow className="font-medium text-slate-500">
+            <TableCell className="text-left">Total Cost</TableCell>
+            <TableCell className="text-right">{totalCost}</TableCell>
+          </TableRow>
+        </TableBody>
+      </Table>
+    </div>
+  )
+}
+
+function ActionResults({ results, petType, levels, exp, levelsGoal, statGoal, costUp, costSac }: {
+  results: Record<string, Result[]>
+  petType: Pet
+  levels: number[]
+  exp: number
+  levelsGoal: number[]
+  statGoal: number
+  candyPrices: Record<RaiseTier, number>
+  costUp: Record<RaiseTier, number>
+  costSac: Record<SacTier, number>
+}) {
+  // currentState and currentResult
+  const currentState = JSON.stringify(levels)
+  const currentResult = results[currentState]
+  const badResult = currentResult[0].actionCount === badEndActionCount
+
+  // Selected action
+  const [selectedAction, setSelectedAction] = useState<string>(currentResult[0].action)
+
+  // Update selected action when results change
+  useEffect(() => {
+    setSelectedAction(currentResult[0].action)
+  }, [currentResult])
+
+  // Summary info
+  const bestCost = formatThousands(costFromActionCount(currentResult[0].actionCount, costUp, costSac))
+  const bestAction = actionString(currentResult[0].action, levels)
+
+  // Generate table entries for actions table
+  const actionsTableEntries: Record<"action" | "actionCost" | "totalCost", string>[] = []
+  const tier = tiers[levels.length]
+  currentResult.forEach(({action, actionCount}) => {
+    const actionCost = 
+      action === "up" ? formatThousands(costUp[tier as RaiseTier]) : 
+      action === "none" ? "N/A" :
+      formatThousands(costSac[action as SacTier])
+    const totalCostNumber = costFromActionCount(actionCount, costUp, costSac)
+    const tableEntry = {
+      action: actionString(action, levels),
+      actionCost: actionCost,
+      totalCost: isFinite(totalCostNumber) ? formatThousands(totalCostNumber) : "Goal Impossible",
+    }
+    actionsTableEntries.push(tableEntry)
+  })
+
+  // Selected Action Count
+  const selectedActionCount = currentResult.find((val) => { return val.action === selectedAction })?.actionCount 
+    || currentResult[0].actionCount
 
   // Probabilities
   const successors = successorsFromAction(levels, selectedAction)
@@ -559,11 +651,12 @@ function ActionResults({ results, petType, levels, exp, levelsGoal, statGoal, co
       !isFinite(costNumber) ? "Goal Impossible" :
       costNumber === 0 ? "Goal Reached" : 
       formatThousands(costNumber)
+    const percent = Math.round(successors[succState] * 100)
     const tableEntry = {
       state: state.join("/"),
       stat: statsTotal(state, petType) + statNameByPetTypeShort[petType],
       cost: costString,
-      prob: Math.round(successors[succState] * 100) + "%",
+      prob: percent > 0 ? percent + "%" : "N/A",
     }
     successorTableEntries.push(tableEntry)
   }
@@ -576,18 +669,30 @@ function ActionResults({ results, petType, levels, exp, levelsGoal, statGoal, co
         </CardHeader>
         <CardContent>
           <div>
-            <div className="flex justify-center mb-4 font-medium text-slate-500">
-              <table>
-                <tr>
-                  <td className="text-left pr-6">Best Average Cost:</td>
-                  <td className="text-right">{ bestCost }</td>
-                </tr>
-                <tr>
-                  <td className="text-left">Best Action:</td>
-                  <td className="text-right">{ bestAction }</td>
-                </tr>
-              </table>
-            </div>
+            {
+              badResult ? (
+                <div>
+                  <h3 className="font-medium text-slate-500 text-center mb-2">Goal Impossible</h3>
+                  <p className="text-slate-500 text-center mb-2">
+                    <i>Target cannot be reached with current pet.</i>
+                  </p>
+                </div>
+              )  
+              : (
+                <div className="flex justify-center mb-4 font-medium text-slate-500">
+                  <table>
+                    <tr>
+                      <td className="text-left pr-6">Best Average Cost:</td>
+                      <td className="text-right">{ bestCost }</td>
+                    </tr>
+                    <tr>
+                      <td className="text-left">Best Action:</td>
+                      <td className="text-right">{ bestAction }</td>
+                    </tr>
+                  </table>
+                </div>
+              )
+            }
             <Table>
               <TableHeader>
                 <TableRow>
@@ -611,7 +716,7 @@ function ActionResults({ results, petType, levels, exp, levelsGoal, statGoal, co
       </Card>
       <Card className="m-2">
         <CardHeader>
-          <CardTitle>Cost Breakdown</CardTitle>
+          <CardTitle>Details</CardTitle>
         </CardHeader>
         <CardContent>
           <Label htmlFor="actionSelect">Action</Label>
@@ -623,7 +728,12 @@ function ActionResults({ results, petType, levels, exp, levelsGoal, statGoal, co
               {
                 currentResult.map(({ action }, index) => {
                   return (
-                    <SelectItem value={action}>{ index === 0 ? actionString(action, levels) + " (Best)" : actionString(action, levels) }</SelectItem>
+                    <SelectItem value={action}>
+                      {
+                        !badResult && index === 0 ? actionString(action, levels) + " (Best)" 
+                        : actionString(action, levels)
+                      }
+                    </SelectItem>
                   )
                 })
               }
@@ -633,81 +743,24 @@ function ActionResults({ results, petType, levels, exp, levelsGoal, statGoal, co
             <div>
               <h3 className="font-medium text-slate-500 text-center mb-2">Goal Impossible</h3>
               <p className="text-slate-500 text-center mb-2">
-                <i>Target pet goals cannot be reached with selected action.</i>
+                <i>Target cannot be reached with selected action.</i>
               </p>
               <BadEndTable 
                 petType={petType}
-                levels={[...levels, 1]}
+                levels={selectedAction === "up" ? [...levels, 1] : [...levels]}
                 levelsGoal={levelsGoal}
                 statGoal={statGoal}
               />
             </div>
-          ) : (
-            <div>
-              <Table className="mb-2">
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Sac Pet Cost</TableHead>
-                  </TableRow>
-                  <TableRow>
-                    <TableHead>Sac Tier</TableHead>
-                    <TableHead className="text-right">Count</TableHead>
-                    <TableHead className="text-right">Cost</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {sacCostTableEntries.map(({action, count, cost}) => (
-                    <TableRow key={"sacCost" + action}>
-                      <TableCell className="text-left">{action}</TableCell>
-                      <TableCell className="text-right">{count}</TableCell>
-                      <TableCell className="text-right">{cost}</TableCell>
-                    </TableRow>
-                  ))}
-                  <TableRow>
-                    <TableCell className="text-left">Total (Sac Pet)</TableCell>
-                    <TableCell></TableCell>
-                    <TableCell className="text-right">{sacCost}</TableCell>
-                  </TableRow>
-                </TableBody>
-              </Table>
-              <Table className="mb-2">
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Pet Candy Cost</TableHead>
-                  </TableRow>
-                  <TableRow>
-                    <TableHead>Raise Tier</TableHead>
-                    <TableHead>Candy</TableHead>
-                    <TableHead className="text-right">Count</TableHead>
-                    <TableHead className="text-right">Cost</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {candyCostTableEntries.map(({action, candy, count, cost}) => (
-                    <TableRow key={"candyCost" + action}>
-                      <TableCell className="text-left">{action}</TableCell>
-                      <TableCell className="text-left">{candy}</TableCell>
-                      <TableCell className="text-right">{count}</TableCell>
-                      <TableCell className="text-right">{cost}</TableCell>
-                    </TableRow>
-                  ))}
-                  <TableRow>
-                    <TableCell className="text-left">Total (Pet Candy)</TableCell>
-                    <TableCell></TableCell>
-                    <TableCell></TableCell>
-                    <TableCell className="text-right">{candyCost}</TableCell>
-                  </TableRow>
-                </TableBody>
-              </Table>
-              <Table>
-                <TableBody>
-                  <TableRow className="font-medium text-slate-500">
-                    <TableCell className="text-left">Total Cost</TableCell>
-                    <TableCell className="text-right">{totalCost}</TableCell>
-                  </TableRow>
-                </TableBody>
-              </Table>
-            </div>
+          ) 
+          : (
+            <CostTable 
+              selectedActionCount={selectedActionCount}
+              levels={levels}
+              exp={exp}
+              costUp={costUp}
+              costSac={costSac}
+            />
           )}
         </CardContent>
       </Card>
@@ -726,7 +779,10 @@ function ActionResults({ results, petType, levels, exp, levelsGoal, statGoal, co
                 currentResult.map(({ action }, index) => {
                   return(
                     <SelectItem value={action}>
-                      { index === 0 ? actionString(action, levels) + " (Best)" : actionString(action, levels) }
+                      { 
+                        !badResult && index === 0 ? actionString(action, levels) + " (Best)" 
+                        : actionString(action, levels) 
+                      }
                     </SelectItem>
                   )
                 })
@@ -790,29 +846,6 @@ export default function PetResults({ petType, levels, exp, statGoal, levelsGoal,
   if (currentResult[0].actionCount === goodEndActionCount) {
     return(
       <div>
-      </div>
-    )
-  }
-  if (currentResult[0].actionCount === badEndActionCount) {
-    return(
-      <div>
-        <Card className="m-2">
-          <CardHeader>
-            <CardTitle>Summary</CardTitle>
-          </CardHeader>
-          <CardContent>
-          <h3 className="font-medium text-slate-500 text-center mb-2">Goal Impossible</h3>
-          <p className="text-slate-500 text-center mb-2">
-            <i>Target pet goals cannot be reached with current pet.</i>
-          </p>
-            <BadEndTable
-              petType={petType}
-              levels={levels}
-              levelsGoal={levelsGoal}
-              statGoal={statGoal}
-            />
-          </CardContent>
-        </Card>
       </div>
     )
   }

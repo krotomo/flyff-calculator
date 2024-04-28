@@ -48,7 +48,11 @@ const formSchema = z.object({
       { message: "Must be between 0 and 100." }
     ),
   statGoal: z.string(),
-  levelsGoal: z.string(),
+  levelsGoal: z.string()
+    .regex(
+      /(^$)|(^(1| )\/([1-2]| )\/([1-3]| )\/([1-4]| )\/([1-5]| )\/([1-7]| )\/([1-9]| )$)/,
+      "Please enter valid levels."
+    ),
   sacPrice: z.array(z.object({
     tier: z.string(),
     price: z.string()
@@ -171,7 +175,6 @@ function PetInput({ setPetState }: {
   })
 
   function onSubmit(formData: z.infer<typeof formSchema>) {
-    console.log(formData)
     const levels = []
     for (const level of formData.levels) {
       if (!isNaN(parseInt(level))) {
