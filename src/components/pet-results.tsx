@@ -415,6 +415,47 @@ function actionString(action: string, state: number[]): string {
   }
 }
 
+function GoodEndTable({ petType, levels, levelsGoal, statGoal }: {
+  petType: Pet
+  levels: number[]
+  levelsGoal: number[]
+  statGoal: number
+}) {
+  // current pet
+  const currentLevelsString = levels.join("/")
+  const currentStatString = statsTotal(levels, petType) + statNameByPetTypeShort[petType]
+
+  // target pet
+  const targetLevelsString = levelsGoal.length ? levelsGoal.join("/") : "N/A"
+  const targetStatString = statGoal ? statGoal + statNameByPetTypeShort[petType] : "N/A"
+
+  return (
+    <div>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead></TableHead>
+            <TableHead>Levels</TableHead>
+            <TableHead className="text-right">Stat</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          <TableRow>
+            <TableHead>Target Pet</TableHead>
+            <TableCell>{ targetLevelsString }</TableCell>
+            <TableCell className="text-right">{ targetStatString }</TableCell>
+          </TableRow>
+          <TableRow>
+            <TableHead>Current Pet</TableHead>
+            <TableCell className="text-green-600">{ currentLevelsString }</TableCell>
+            <TableCell className="text-right text-green-600">{ currentStatString }</TableCell>
+          </TableRow>
+        </TableBody>
+      </Table>
+    </div>
+  )
+}
+
 function BadEndTable({ petType, levels, levelsGoal, statGoal }: {
   petType: Pet
   levels: number[]
@@ -594,6 +635,7 @@ function ActionResults({ results, petType, levels, exp, levelsGoal, statGoal, co
   // currentState and currentResult
   const currentState = JSON.stringify(levels)
   const currentResult = results[currentState]
+  const goodResult = currentResult[0].actionCount === goodEndActionCount
   const badResult = currentResult[0].actionCount === badEndActionCount
 
   // Selected action
@@ -617,10 +659,14 @@ function ActionResults({ results, petType, levels, exp, levelsGoal, statGoal, co
       action === "none" ? "N/A" :
       formatThousands(costSac[action as SacTier])
     const totalCostNumber = costFromActionCount(actionCount, costUp, costSac)
+    const totalCostString = 
+      !isFinite(totalCostNumber) ? "Goal Impossible"
+      : totalCostNumber === 0 ? "Goal Reached"
+      : formatThousands(totalCostNumber)
     const tableEntry = {
       action: actionString(action, levels),
       actionCost: actionCost,
-      totalCost: isFinite(totalCostNumber) ? formatThousands(totalCostNumber) : "Goal Impossible",
+      totalCost: totalCostString,
     }
     actionsTableEntries.push(tableEntry)
   })
@@ -670,7 +716,15 @@ function ActionResults({ results, petType, levels, exp, levelsGoal, statGoal, co
         <CardContent>
           <div>
             {
-              badResult ? (
+              goodResult ? (
+                <div>
+                  <h3 className="font-medium text-slate-500 text-center mb-2">Goal Reached!</h3>
+                  <p className="text-slate-500 text-center mb-2">
+                    <i>Current pet meets all target goals. No action needed.</i>
+                  </p>
+                </div>
+              )
+              : badResult ? (
                 <div>
                   <h3 className="font-medium text-slate-500 text-center mb-2">Goal Impossible</h3>
                   <p className="text-slate-500 text-center mb-2">
@@ -679,7 +733,7 @@ function ActionResults({ results, petType, levels, exp, levelsGoal, statGoal, co
                 </div>
               )  
               : (
-                <div className="flex justify-center mb-4 font-medium text-slate-500">
+                <div className="flex justify-center mb-2 font-medium text-slate-500">
                   <table>
                     <tr>
                       <td className="text-left pr-6">Best Average Cost:</td>
@@ -693,6 +747,15 @@ function ActionResults({ results, petType, levels, exp, levelsGoal, statGoal, co
                 </div>
               )
             }
+          </div>
+        </CardContent>
+      </Card>
+      <Card className="m-2">
+        <CardHeader>
+          <CardTitle>Actions</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div>
             <Table>
               <TableHeader>
                 <TableRow>
@@ -719,27 +782,45 @@ function ActionResults({ results, petType, levels, exp, levelsGoal, statGoal, co
           <CardTitle>Details</CardTitle>
         </CardHeader>
         <CardContent>
-          <Label htmlFor="actionSelect">Action</Label>
-          <Select value={selectedAction} onValueChange={(e) => setSelectedAction(e)}>
-            <SelectTrigger id="actionSelect" className="mb-4">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {
-                currentResult.map(({ action }, index) => {
-                  return (
-                    <SelectItem value={action}>
-                      {
-                        !badResult && index === 0 ? actionString(action, levels) + " (Best)" 
-                        : actionString(action, levels)
-                      }
-                    </SelectItem>
-                  )
-                })
-              }
-            </SelectContent>
-          </Select>
-          { selectedActionCount === badEndActionCount ? (
+          { !goodResult && (
+            <div>
+              <Label htmlFor="actionSelect">Action</Label>
+              <Select value={selectedAction} onValueChange={(e) => setSelectedAction(e)}>
+                <SelectTrigger id="actionSelect" className="mb-4">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {
+                    currentResult.map(({ action }, index) => {
+                      return (
+                        <SelectItem value={action}>
+                          {
+                            !goodResult && !badResult && index === 0 ? actionString(action, levels) + " (Best)" 
+                            : actionString(action, levels)
+                          }
+                        </SelectItem>
+                      )
+                    })
+                  }
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+          { goodResult ? (
+            <div>
+              <h3 className="font-medium text-slate-500 text-center mb-2">Goal Reached!</h3>
+              <p className="text-slate-500 text-center mb-2">
+                <i>Current pet meets level and/or stat requirements.</i>
+              </p>
+              <GoodEndTable
+                petType={petType}
+                levels={levels}
+                levelsGoal={levelsGoal}
+                statGoal={statGoal}
+              />
+            </div>
+          )
+          : badResult || selectedActionCount === badEndActionCount ? (
             <div>
               <h3 className="font-medium text-slate-500 text-center mb-2">Goal Impossible</h3>
               <p className="text-slate-500 text-center mb-2">
@@ -747,7 +828,7 @@ function ActionResults({ results, petType, levels, exp, levelsGoal, statGoal, co
               </p>
               <BadEndTable 
                 petType={petType}
-                levels={selectedAction === "up" ? [...levels, 1] : [...levels]}
+                levels={selectedAction === "up" ? [...levels, 1] : levels}
                 levelsGoal={levelsGoal}
                 statGoal={statGoal}
               />
@@ -780,7 +861,7 @@ function ActionResults({ results, petType, levels, exp, levelsGoal, statGoal, co
                   return(
                     <SelectItem value={action}>
                       { 
-                        !badResult && index === 0 ? actionString(action, levels) + " (Best)" 
+                        !goodResult && !badResult && index === 0 ? actionString(action, levels) + " (Best)" 
                         : actionString(action, levels) 
                       }
                     </SelectItem>
@@ -838,17 +919,6 @@ export default function PetResults({ petType, levels, exp, statGoal, levelsGoal,
   // Calculate results
   const results = calculatePetCost(petType, levelsGoal, statGoal, costUp, sacPrices)
 
-  // State string
-  const currentState = JSON.stringify(levels)
-  const currentResult = results[currentState]
-
-  // Are we at an "end" state?
-  if (currentResult[0].actionCount === goodEndActionCount) {
-    return(
-      <div>
-      </div>
-    )
-  }
   return (
     <ActionResults 
       petType={petType}
