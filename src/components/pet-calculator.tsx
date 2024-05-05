@@ -48,12 +48,12 @@ export default function PetCalculator() {
             <h2 className="text-3xl font-semibold my-4 pl-4">Results</h2>
             <PetResults
               petType={petType}
-              levels={levels}
-              exp={exp}
-              statGoal={statGoal}
-              levelsGoal={levelsGoal}
-              sacPrices={sacPrices}
-              candyPrices={candyPrices}
+              levels={levels!}
+              exp={exp!}
+              statGoal={statGoal!}
+              levelsGoal={levelsGoal!}
+              sacPrices={sacPrices!}
+              candyPrices={candyPrices!}
             ></PetResults>
           </div>
         </div>

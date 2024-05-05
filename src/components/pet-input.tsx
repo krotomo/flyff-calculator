@@ -139,31 +139,33 @@ function PetInput({ setPetState }: {
     "fox": "INT",
   }
 
+  const defaultValues = {
+    petType: "",
+    levels: "",
+    exp: "",
+    statGoal: "",
+    levelsGoal: "",
+    sacPrice: [
+      { tier: "e", price: "6000000" },
+      { tier: "d", price: "20000000" },
+      { tier: "c", price: "57500000" },
+      { tier: "b", price: "120000000" },
+      { tier: "a", price: "220000000" },
+      { tier: "s", price: "545000000" },
+    ],
+    candyPrice: [
+      { tier: "f", price: "200000" },
+      { tier: "e", price: "700000" },
+      { tier: "d", price: "1500000" },
+      { tier: "c", price: "2500000" },
+      { tier: "b", price: "4000000" },
+      { tier: "a", price: "6500000" },
+    ]
+  }
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
-      petType: "",
-      levels: "",
-      exp: "",
-      statGoal: "",
-      levelsGoal: "",
-      sacPrice: [
-        { tier: "e", price: "6000000" },
-        { tier: "d", price: "20000000" },
-        { tier: "c", price: "57500000" },
-        { tier: "b", price: "120000000" },
-        { tier: "a", price: "220000000" },
-        { tier: "s", price: "545000000" },
-      ],
-      candyPrice: [
-        { tier: "f", price: "200000" },
-        { tier: "e", price: "700000" },
-        { tier: "d", price: "1500000" },
-        { tier: "c", price: "2500000" },
-        { tier: "b", price: "4000000" },
-        { tier: "a", price: "6500000" },
-      ]
-    }
+    defaultValues: defaultValues
   })
   const { fields: sacPriceFields } = useFieldArray({
     control: form.control,
@@ -173,6 +175,14 @@ function PetInput({ setPetState }: {
     control: form.control,
     name: "candyPrice",
   })
+
+  function resetPrices() {
+    form.reset({
+      ...form.getValues(),
+      sacPrice: defaultValues.sacPrice,
+      candyPrice: defaultValues.candyPrice,
+    })
+  }
 
   function onSubmit(formData: z.infer<typeof formSchema>) {
     const levels = []
@@ -433,7 +443,7 @@ function PetInput({ setPetState }: {
               </div>
             </div>
             <div className="text-center">
-              <Button>Reset Default Prices</Button>
+              <Button onClick={resetPrices}>Default Prices</Button>
             </div>
           </CardContent>
         </Card>

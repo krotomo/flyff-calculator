@@ -298,7 +298,7 @@ function successorsFromAction(
   action: string,
 ) {
   const successors = {} as Record<string, number>
-  if (action === "up") {
+  if (state.length < 7 && action === "up") {
     const upTier = tiers[state.length + 1]
     for (const [index, pSucc] of p[upTier]![upTier]!.entries()) {
       const succState = [...state]
@@ -735,14 +735,16 @@ function ActionResults({ results, petType, levels, exp, levelsGoal, statGoal, co
               : (
                 <div className="flex justify-center mb-2 font-medium text-slate-500">
                   <table>
-                    <tr>
-                      <td className="text-left pr-6">Best Average Cost:</td>
-                      <td className="text-right">{ bestCost }</td>
-                    </tr>
-                    <tr>
-                      <td className="text-left">Best Action:</td>
-                      <td className="text-right">{ bestAction }</td>
-                    </tr>
+                    <tbody>
+                      <tr>
+                        <td className="text-left pr-6">Best Average Cost:</td>
+                        <td className="text-right">{ bestCost }</td>
+                      </tr>
+                      <tr>
+                        <td className="text-left">Best Action:</td>
+                        <td className="text-right">{ bestAction }</td>
+                      </tr>
+                    </tbody>
                   </table>
                 </div>
               )
@@ -793,7 +795,7 @@ function ActionResults({ results, petType, levels, exp, levelsGoal, statGoal, co
                   {
                     currentResult.map(({ action }, index) => {
                       return (
-                        <SelectItem value={action}>
+                        <SelectItem key={"good" + action} value={action}>
                           {
                             !goodResult && !badResult && index === 0 ? actionString(action, levels) + " (Best)" 
                             : actionString(action, levels)
@@ -859,7 +861,7 @@ function ActionResults({ results, petType, levels, exp, levelsGoal, statGoal, co
               {
                 currentResult.map(({ action }, index) => {
                   return(
-                    <SelectItem value={action}>
+                    <SelectItem key={"prob" + action} value={action}>
                       { 
                         !goodResult && !badResult && index === 0 ? actionString(action, levels) + " (Best)" 
                         : actionString(action, levels) 
@@ -881,7 +883,7 @@ function ActionResults({ results, petType, levels, exp, levelsGoal, statGoal, co
             </TableHeader>
             <TableBody>
               {successorTableEntries.map(({state, stat, cost, prob}) => (
-                <TableRow>
+                <TableRow key={state}>
                   <TableCell className="text-left">{state}</TableCell>
                   <TableCell className="text-right">{stat}</TableCell>
                   <TableCell className="text-right">{cost}</TableCell>
@@ -897,7 +899,7 @@ function ActionResults({ results, petType, levels, exp, levelsGoal, statGoal, co
 }
 
 export default function PetResults({ petType, levels, exp, statGoal, levelsGoal, sacPrices, candyPrices }: {
-  petType: Pet
+  petType: Pet | undefined
   levels: number[]
   exp: number
   statGoal: number
