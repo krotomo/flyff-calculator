@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react"
 import { useForm, useFieldArray } from "react-hook-form"
 import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -29,6 +30,57 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+
+const statNameByPetType: Record<Pet, string> = {
+  "unicorn": "HP",
+  "dragon": "Attack",
+  "griffin": "Defense",
+  "angel": "% Critical Chance",
+  "crab": "% Critical Damage",
+  "tiger": "STR",
+  "lion": "STA",
+  "rabbit": "DEX",
+  "fox": "INT",
+}
+
+const defaultValues = {
+  petType: "",
+  levels: "",
+  exp: "",
+  statGoal: "",
+  levelsGoal: "",
+  sacPrice: [
+    { tier: "e", price: "6000000" },
+    { tier: "d", price: "20000000" },
+    { tier: "c", price: "57500000" },
+    { tier: "b", price: "120000000" },
+    { tier: "a", price: "220000000" },
+    { tier: "s", price: "545000000" },
+  ],
+  candyPrice: [
+    { tier: "f", price: "200000" },
+    { tier: "e", price: "700000" },
+    { tier: "d", price: "1500000" },
+    { tier: "c", price: "2500000" },
+    { tier: "b", price: "4000000" },
+    { tier: "a", price: "6500000" },
+  ]
+}
+
+function getInitialValues() {
+  const localSacPrice = localStorage.getItem("sacPrice")
+  const localCandyPrice = localStorage.getItem("candyPrice")
+  try {
+    return {
+      ...defaultValues,
+      sacPrice: localSacPrice ? JSON.parse(localSacPrice) : defaultValues.sacPrice,
+      candyPrice: localCandyPrice ? JSON.parse(localCandyPrice) : defaultValues.candyPrice,
+    }
+  }
+  catch (error) {
+    return defaultValues
+  }
+}
 
 const formSchema = z.object({
   petType: z.string()
@@ -127,45 +179,12 @@ function PetInput({ setPetState }: {
     candyPrices: Record<RaiseTier, number>,
   ) => void;
 }) {
-  const statNameByPetType: Record<Pet, string> = {
-    "unicorn": "HP",
-    "dragon": "Attack",
-    "griffin": "Defense",
-    "angel": "% Critical Chance",
-    "crab": "% Critical Damage",
-    "tiger": "STR",
-    "lion": "STA",
-    "rabbit": "DEX",
-    "fox": "INT",
-  }
-
-  const defaultValues = {
-    petType: "",
-    levels: "",
-    exp: "",
-    statGoal: "",
-    levelsGoal: "",
-    sacPrice: [
-      { tier: "e", price: "6000000" },
-      { tier: "d", price: "20000000" },
-      { tier: "c", price: "57500000" },
-      { tier: "b", price: "120000000" },
-      { tier: "a", price: "220000000" },
-      { tier: "s", price: "545000000" },
-    ],
-    candyPrice: [
-      { tier: "f", price: "200000" },
-      { tier: "e", price: "700000" },
-      { tier: "d", price: "1500000" },
-      { tier: "c", price: "2500000" },
-      { tier: "b", price: "4000000" },
-      { tier: "a", price: "6500000" },
-    ]
-  }
+  const [savePricesCount, setSavePricesCount] = useState<number>(0)
+  const [saveButtonText, setSaveButtonText] = useState("Save Prices")
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: defaultValues
+    defaultValues: getInitialValues()
   })
   const { fields: sacPriceFields } = useFieldArray({
     control: form.control,
@@ -175,6 +194,20 @@ function PetInput({ setPetState }: {
     control: form.control,
     name: "candyPrice",
   })
+
+  useEffect(() => {
+    console.log(form.getValues())
+    localStorage.setItem("sacPrice", JSON.stringify(form.getValues().sacPrice))
+    localStorage.setItem("candyPrice", JSON.stringify(form.getValues().candyPrice))
+    setTimeout(() => {
+      setSaveButtonText("Save Prices")
+    }, 500)
+  }, [savePricesCount, form])
+
+  function savePrices() {
+    setSavePricesCount(savePricesCount + 1)
+    setSaveButtonText("Saved!")
+  }
 
   function resetPrices() {
     form.reset({
@@ -442,8 +475,13 @@ function PetInput({ setPetState }: {
                 }
               </div>
             </div>
-            <div className="text-center">
-              <Button onClick={resetPrices}>Default Prices</Button>
+            <div className="flex flex-row justify-center">
+              <div className="text-center mx-1">
+                <Button className="w-32" type="button" onClick={savePrices}>{saveButtonText}</Button>
+              </div>
+              <div className="text-center mx-1">
+                <Button className="w-32" type="button" onClick={resetPrices}>Default Prices</Button>
+              </div>
             </div>
           </CardContent>
         </Card>

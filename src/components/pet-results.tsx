@@ -25,7 +25,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import patternFormatter from "react-number-format"
 
 // Number formatting
 const numberFormat = new Intl.NumberFormat("en-us")
@@ -111,7 +110,7 @@ const statsByPetType: Record<Pet, number[]> = {
 
 const statNameByPetTypeShort: Record<Pet, string> = {
   "unicorn": " HP",
-  "dragon": " ATK",
+  "dragon": " Attack",
   "griffin": " DEF",
   "angel": "% CC",
   "crab": "% CD",
