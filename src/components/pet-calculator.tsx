@@ -1,6 +1,7 @@
 import { PetInput } from "../components/pet-input"
 import PetResults from "../components/pet-results"
 import { useState } from "react"
+import flyffLogo from "../assets/flyff.png"
 
 export default function PetCalculator() {
   // form state
@@ -32,20 +33,21 @@ export default function PetCalculator() {
   
 
   return(
-    <div className="flex flex-col items-center">
+    <div className="max-w-screen-xl p-8 m-auto flex justify-center">
       <div className="lg:w-3/4">
-        <div>
-          <h1 className="text-left text-4xl font-bold mb-4 pl-4">Pet Cost Calculator</h1>
+        <div className="flex flex-col items-center">
+          <img className="w-48" src={flyffLogo}></img>
+          <h1 className="text-center text-4xl font-bold mb-4 pl-4">Pet Cost Calculator</h1>
         </div>
         <div className="sm:flex">
           <div className="basis-1/2">
-            <h2 className="text-3xl my-4 font-semibold pl-4">Pet Info</h2>
+            <h2 className="text-center text-primary text-3xl my-4 font-semibold pl-4">Pet Info</h2>
             <PetInput
               setPetState={setPetState}
             ></PetInput>
           </div>
           <div className="basis-1/2">
-            <h2 className="text-3xl font-semibold my-4 pl-4">Results</h2>
+            <h2 className="text-center text-primary text-3xl font-semibold my-4 pl-4">Results</h2>
             <PetResults
               petType={petType}
               levels={levels!}
@@ -57,7 +59,7 @@ export default function PetCalculator() {
             ></PetResults>
           </div>
         </div>
-        <div className="m-2 text-slate-500">Made by krotomo</div>
+        <div className="m-2 text-primary opacity-60">Made by krotomo using assets belonging to Gala Lab Corp</div>
       </div>
     </div>
   )

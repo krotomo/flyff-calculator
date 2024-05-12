@@ -180,7 +180,7 @@ function PetInput({ setPetState }: {
   ) => void;
 }) {
   const [savePricesCount, setSavePricesCount] = useState<number>(0)
-  const [saveButtonText, setSaveButtonText] = useState("Save Prices")
+  const [saveButtonText, setSaveButtonText] = useState("Remember Prices")
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -200,7 +200,7 @@ function PetInput({ setPetState }: {
     localStorage.setItem("sacPrice", JSON.stringify(form.getValues().sacPrice))
     localStorage.setItem("candyPrice", JSON.stringify(form.getValues().candyPrice))
     setTimeout(() => {
-      setSaveButtonText("Save Prices")
+      setSaveButtonText("Remember Prices")
     }, 500)
   }, [savePricesCount, form])
 
@@ -411,7 +411,7 @@ function PetInput({ setPetState }: {
           <CardContent>
             <div className="flex justify-center mb-4">
               <div className="flex-1 pr-4 border-r">
-                <h3 className="font-medium text-slate-500">Sac Pet</h3>
+                <h3 className="font-medium text-primary">Sac Pet</h3>
                 {
                   sacPriceFields.map((field, index: number) => {
                     return (              
@@ -443,7 +443,7 @@ function PetInput({ setPetState }: {
                 }
               </div>
               <div className="flex-1 pl-4">
-                <h3 className="font-medium text-slate-500">Pet Candy</h3>
+                <h3 className="font-medium text-primary">Pet Candy</h3>
                 {
                   candyPriceFields.map((field, index: number) => {
                     return (              

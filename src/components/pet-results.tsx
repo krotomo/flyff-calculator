@@ -496,8 +496,8 @@ function BadEndTable({ petType, levels, levelsGoal, statGoal }: {
           </TableRow>
           <TableRow>
             <TableHead>Best Possible Pet</TableHead>
-            <TableCell className={levelsGoalMet ? "" : "text-red-500"}>{ bestLevelsString }</TableCell>
-            <TableCell className={statGoalMet ? "text-right" : "text-right text-red-500"}>{ bestStatString }</TableCell>
+            <TableCell className={levelsGoalMet ? "" : "text-destructive"}>{ bestLevelsString }</TableCell>
+            <TableCell className={statGoalMet ? "text-right" : "text-right text-destructive"}>{ bestStatString }</TableCell>
           </TableRow>
         </TableBody>
       </Table>
@@ -610,7 +610,7 @@ function CostTable({ selectedActionCount, levels, exp, costUp, costSac }: {
       </Table>
       <Table>
         <TableBody>
-          <TableRow className="font-medium text-slate-500">
+          <TableRow className="font-medium text-primary">
             <TableCell className="text-left">Total Cost</TableCell>
             <TableCell className="text-right">{totalCost}</TableCell>
           </TableRow>
@@ -717,22 +717,22 @@ function ActionResults({ results, petType, levels, exp, levelsGoal, statGoal, co
             {
               goodResult ? (
                 <div>
-                  <h3 className="font-medium text-slate-500 text-center mb-2">Goal Reached!</h3>
-                  <p className="text-slate-500 text-center mb-2">
-                    <i>Current pet meets all target goals. No action needed.</i>
+                  <h3 className="font-medium text-primary text-center mb-2">Goal Reached!</h3>
+                  <p className="text-primary text-center mb-2">
+                    <i className="opacity-60">Current pet meets all target goals. No action needed.</i>
                   </p>
                 </div>
               )
               : badResult ? (
                 <div>
-                  <h3 className="font-medium text-slate-500 text-center mb-2">Goal Impossible</h3>
-                  <p className="text-slate-500 text-center mb-2">
-                    <i>Target cannot be reached with current pet.</i>
+                  <h3 className="font-medium text-primary text-center mb-2">Goal Impossible</h3>
+                  <p className="text-primary text-center mb-2">
+                    <i className="opacity-60">Target cannot be reached with current pet.</i>
                   </p>
                 </div>
               )  
               : (
-                <div className="flex justify-center mb-2 font-medium text-slate-500">
+                <div className="flex justify-center mb-2 font-medium text-primary">
                   <table>
                     <tbody>
                       <tr>
@@ -780,7 +780,7 @@ function ActionResults({ results, petType, levels, exp, levelsGoal, statGoal, co
       </Card>
       <Card className="m-2">
         <CardHeader>
-          <CardTitle>Details</CardTitle>
+          <CardTitle>Cost Details</CardTitle>
         </CardHeader>
         <CardContent>
           { !goodResult && (
@@ -809,9 +809,9 @@ function ActionResults({ results, petType, levels, exp, levelsGoal, statGoal, co
           )}
           { goodResult ? (
             <div>
-              <h3 className="font-medium text-slate-500 text-center mb-2">Goal Reached!</h3>
-              <p className="text-slate-500 text-center mb-2">
-                <i>Current pet meets level and/or stat requirements.</i>
+              <h3 className="font-medium text-primary text-center mb-2">Goal Reached!</h3>
+              <p className="text-primary text-center mb-2">
+                <i className="opacity-60">Current pet meets level and/or stat requirements.</i>
               </p>
               <GoodEndTable
                 petType={petType}
@@ -823,9 +823,9 @@ function ActionResults({ results, petType, levels, exp, levelsGoal, statGoal, co
           )
           : badResult || selectedActionCount === badEndActionCount ? (
             <div>
-              <h3 className="font-medium text-slate-500 text-center mb-2">Goal Impossible</h3>
-              <p className="text-slate-500 text-center mb-2">
-                <i>Target cannot be reached with selected action.</i>
+              <h3 className="font-medium text-primary text-center mb-2">Goal Impossible</h3>
+              <p className="text-primary text-center mb-2">
+                <i className="opacity-60">Target cannot be reached with selected action.</i>
               </p>
               <BadEndTable 
                 petType={petType}
@@ -909,7 +909,7 @@ export default function PetResults({ petType, levels, exp, statGoal, levelsGoal,
   if (!petType) {
     return (
       <div className="my-20 text-center">
-        <i className="text-slate-500">Please complete Pet Info to see results.</i>
+        <i className="text-primary opacity-60">Please complete Pet Info to see results.</i>
       </div>
     )
   }
