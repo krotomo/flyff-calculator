@@ -301,6 +301,7 @@ function PetInput({ setPetState }: {
                             onChange={onChange}
                             value={value}
                             type="text"
+                            inputMode="numeric"
                             allowEmptyFormatting
                             format="#/#/#/#/#/#/#"
                             customInput={Input}
@@ -325,6 +326,7 @@ function PetInput({ setPetState }: {
                             onChange={onChange}
                             value={value}
                             type="text"
+                            inputMode="numeric"
                             suffix={"%"}
                             customInput={Input}
                           />
@@ -358,6 +360,7 @@ function PetInput({ setPetState }: {
                             onChange={onChange}
                             value={value}
                             type="text"
+                            inputMode="numeric"
                             allowEmptyFormatting
                             format="#/#/#/#/#/#/#"
                             customInput={Input}
@@ -382,6 +385,7 @@ function PetInput({ setPetState }: {
                             onChange={onChange}
                             value={value}
                             type="text"
+                            inputMode="numeric"
                             suffix={statNameByPetType[petType] ? (" " + statNameByPetType[petType]) : ""}
                             customInput={Input}
                           />
@@ -425,6 +429,7 @@ function PetInput({ setPetState }: {
                                   onChange={onChange}
                                   value={value}
                                   type="text"
+                                  inputMode="numeric"
                                   thousandsGroupStyle="thousand"
                                   thousandSeparator=","
                                   customInput={Input}
@@ -457,6 +462,7 @@ function PetInput({ setPetState }: {
                                   onChange={onChange}
                                   value={value}
                                   type="text"
+                                  inputMode="numeric"
                                   thousandsGroupStyle="thousand"
                                   thousandSeparator=","
                                   customInput={Input}
