@@ -59,7 +59,7 @@ export default function PetCalculator() {
             ></PetResults>
           </div>
         </div>
-        <div className="m-4 mt-8 text-primary opacity-60">Made by krotomo using data and assets belonging to Gala Lab Corp</div>
+        <div className="text-center text-primary opacity-60 mt-10">Made by krotomo using data and assets owned by Gala Lab Corp</div>
       </div>
     </div>
   )

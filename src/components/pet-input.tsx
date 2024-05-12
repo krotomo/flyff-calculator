@@ -29,15 +29,47 @@ import {
 } from "@/components/ui/card"
 
 const statNameByPetType: Record<Pet, string> = {
-  "unicorn": "HP",
-  "dragon": "Attack",
-  "griffin": "Defense",
+  "unicorn": " HP",
+  "dragon": " Attack",
+  "griffin": " Defense",
   "angel": "% Critical Chance",
   "crab": "% Critical Damage",
-  "tiger": "STR",
-  "lion": "STA",
-  "rabbit": "DEX",
-  "fox": "INT",
+  "tiger": " STR",
+  "lion": " STA",
+  "rabbit": " DEX",
+  "fox": " INT",
+}
+
+const tiers: Tier[] = ["egg", "f", "e", "d", "c", "b", "a", "s"]
+
+const statsByPetType: Record<Pet, number[]> = {
+  "unicorn": [96, 191, 383, 670, 1053, 1356, 1628, 2539, 3161],
+  "dragon": [7, 13, 27, 47, 73, 95, 113, 165, 220],
+  "angel": [1, 2, 3, 4, 5, 6, 7, 8, 9],
+  "griffin": [6, 12, 24, 42, 66, 88, 102, 140, 198],
+  "fox": [1, 2, 4, 7, 11, 15, 17, 24, 33],
+  "rabbit": [1, 2, 4, 7, 11, 15, 17, 24, 33],
+  "tiger": [1, 2, 4, 7, 11, 15, 17, 24, 33],
+  "crab": [2, 3, 4, 5, 6, 7, 9, 11, 16],
+  "lion": [1, 2, 4, 7, 11, 15, 17, 24, 33]
+}
+
+const statRange: Record<Pet, { min: number, max: number }> = {} as Record<Pet, { min: number, max: number }>
+Object.keys(statsByPetType).forEach((petType) => {
+  statRange[petType as Pet] = {
+    min: statsByPetType[petType as Pet][0],
+    max: [0, 1, 2, 3, 4, 6, 8].reduce((acc, curr) => {
+      return acc + statsByPetType[petType as Pet][curr]
+    }, 0)
+  }
+})
+
+function statsTotal(state: number[], petType: Pet): number {
+  let sum = 0
+  for (const level of state) {
+    sum += statsByPetType[petType][level-1]
+  }
+  return sum
 }
 
 const defaultValues = {
@@ -79,12 +111,14 @@ function getInitialValues() {
   }
 }
 
+const levelsRegex = /(^$)|(^(1| )\/([1-2]| )\/([1-3]| )\/([1-4]| )\/([1-5]| )\/([1-7]| )\/([1-9]| )$)/
+
 const formSchema = z.object({
   petType: z.string()
     .min(1, "Field is required."),
   levels: z.string()
     .regex(
-      /(^$)|(^(1| )\/([1-2]| )\/([1-3]| )\/([1-4]| )\/([1-5]| )\/([1-7]| )\/([1-9]| )$)/,
+      levelsRegex,
       "Please enter valid levels."
     ),
   exp: z.string()
@@ -99,7 +133,7 @@ const formSchema = z.object({
   statGoal: z.string(),
   levelsGoal: z.string()
     .regex(
-      /(^$)|(^(1| )\/([1-2]| )\/([1-3]| )\/([1-4]| )\/([1-5]| )\/([1-7]| )\/([1-9]| )$)/,
+      levelsRegex,
       "Please enter valid levels."
     ),
   sacPrice: z.array(z.object({
@@ -151,18 +185,6 @@ const stringToInteger = (val: string) => {
 
 const stringIsInteger = (val: string) => {
   return /^\d+$/.test(val.replace(/,/g, ""))
-}
-
-const statRange: Record<Pet, { min: number, max: number }> = {
-  "unicorn": { min: 78, max: 7182 },
-  "dragon": { min: 7, max: 500 },
-  "griffin": { min: 6, max: 450 },
-  "angel": { min: 1, max: 31 },
-  "crab": { min: 2, max: 45 },
-  "tiger": { min: 1, max: 75 },
-  "lion": { min: 1, max: 75 },
-  "rabbit": { min: 1, max: 75 },
-  "fox": { min: 1, max: 75 },
 }
 
 function PetInput({ setPetState }: {
@@ -245,8 +267,19 @@ function PetInput({ setPetState }: {
   }
 
   const petType: Pet = form.watch("petType") as Pet
+  const levels: string = form.watch("levels")
   const statGoal: string = form.watch("statGoal")
   const levelsGoal: string = form.watch("levelsGoal")
+
+  const levelsArray = levelsStringToArray(levels)
+  const tier = tiers[levelsArray.length]
+  const tierString = levelsRegex.test(levels) ? tier[0].toUpperCase() + tier.slice(1) : "N/A"
+  const statSuffix = statNameByPetType[petType] ? (statNameByPetType[petType]) : ""
+  const currentStat = 
+    petType && levelsArray.length > 0 && levelsRegex.test(levels) 
+    ? statsTotal(levelsArray, petType) + statSuffix 
+    : "N/A"
+  const isSubmitDisabled = !statGoal && (!levelsGoal || levelsGoal.startsWith(" "))
 
   return(
     <Form {...form}>
@@ -338,6 +371,14 @@ function PetInput({ setPetState }: {
                 />
               </div>
             </div>
+            <div className="flex flex-row text-sm">
+              <div className="w-1/2 pl-1 font-medium">
+                <p>Tier: {tierString}</p>
+              </div>
+              <div className="w-1/2 pl-1 font-medium">
+                <p>Stat: {currentStat}</p>
+              </div>
+            </div>
           </CardContent>
         </Card>
         <Card className="m-2">
@@ -386,7 +427,7 @@ function PetInput({ setPetState }: {
                             value={value}
                             type="text"
                             inputMode="numeric"
-                            suffix={statNameByPetType[petType] ? (" " + statNameByPetType[petType]) : ""}
+                            suffix={statSuffix}
                             customInput={Input}
                           />
                         </FormControl>
@@ -400,7 +441,7 @@ function PetInput({ setPetState }: {
             <div className="text-center">
               <Button 
                 type="submit" 
-                disabled={!statGoal && (!levelsGoal || levelsGoal.startsWith(" "))}
+                disabled={isSubmitDisabled}
               >Calculate Cost</Button>
             </div>
           </CardContent>
