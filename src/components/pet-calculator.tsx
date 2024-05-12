@@ -41,13 +41,13 @@ export default function PetCalculator() {
         </div>
         <div className="sm:flex">
           <div className="basis-1/2">
-            <h2 className="text-primary text-3xl font-semibold my-4 ml-4">Pet Info</h2>
+            <h2 className="text-center text-primary text-3xl font-semibold my-4">Pet Info</h2>
             <PetInput
               setPetState={setPetState}
             ></PetInput>
           </div>
           <div className="basis-1/2">
-            <h2 className="text-primary text-3xl font-semibold my-4 ml-4">Results</h2>
+            <h2 className="text-center text-primary text-3xl font-semibold my-4">Results</h2>
             <PetResults
               petType={petType}
               levels={levels!}
