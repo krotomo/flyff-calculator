@@ -871,18 +871,18 @@ function ActionResults({ results, petType, levels, exp, levelsGoal, statGoal, co
             <TableHeader>
               <TableRow>
                 <TableHead>Levels</TableHead>
-                <TableHead className="text-right pl-1">Stat</TableHead>
-                <TableHead className="text-right pl-1">Cost Left</TableHead>
-                <TableHead className="text-right pl-1">%</TableHead>
+                <TableHead className="text-right pl-0">Stat</TableHead>
+                <TableHead className="text-right pl-0">Cost Left</TableHead>
+                <TableHead className="text-right pl-0">%</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {successorTableEntries.map(({state, stat, cost, prob}) => (
                 <TableRow key={state}>
                   <TableCell className="text-left">{state}</TableCell>
-                  <TableCell className="text-right pl-1">{stat}</TableCell>
-                  <TableCell className="text-right pl-1">{cost}</TableCell>
-                  <TableCell className="text-right pl-1">{prob}</TableCell>
+                  <TableCell className="text-right pl-0">{stat}</TableCell>
+                  <TableCell className="text-right pl-0">{cost}</TableCell>
+                  <TableCell className="text-right pl-0">{prob}</TableCell>
                 </TableRow>
               ))}
             </TableBody>
