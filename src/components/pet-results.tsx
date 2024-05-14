@@ -873,7 +873,7 @@ function ActionResults({ results, petType, levels, exp, levelsGoal, statGoal, co
                 <TableHead>Levels</TableHead>
                 <TableHead className="text-right">Stat</TableHead>
                 <TableHead className="text-right">Cost Left</TableHead>
-                <TableHead className="text-right">Chance</TableHead>
+                <TableHead className="text-right">%</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
