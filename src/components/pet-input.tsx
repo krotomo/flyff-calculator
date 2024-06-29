@@ -111,6 +111,7 @@ function getInitialValues() {
   }
 }
 
+const noZeroRegex = /(^[^0]*$)/
 const levelsRegex = /(^$)|(^(1| )\/([1-2]| )\/([1-3]| )\/([1-4]| )\/([1-5]| )\/([1-7]| )\/([1-9]| )$)/
 
 const formSchema = z.object({
@@ -118,8 +119,12 @@ const formSchema = z.object({
     .min(1, "Field is required."),
   levels: z.string()
     .regex(
+      noZeroRegex,
+      "Levels cannot be zero."
+    )
+    .regex(
       levelsRegex,
-      "Please enter valid levels."
+      "Must be at most 1/2/3/4/5/7/9."
     ),
   exp: z.string()
     .refine(
@@ -133,8 +138,12 @@ const formSchema = z.object({
   statGoal: z.string(),
   levelsGoal: z.string()
     .regex(
+      noZeroRegex,
+      "Levels cannot be zero."
+    )
+    .regex(
       levelsRegex,
-      "Please enter valid levels."
+      "Must be at most 1/2/3/4/5/7/9."
     ),
   sacPrice: z.array(z.object({
     tier: z.string(),
